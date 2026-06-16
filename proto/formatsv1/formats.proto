@@ -1,0 +1,166 @@
+syntax = "proto3";
+package muxcore.formats.v1;
+option go_package = "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1;formatsv1";
+
+service FormatService {
+  rpc ListFormats(ListFormatsRequest) returns (ListFormatsResponse);
+  rpc CreateFormat(CreateFormatRequest) returns (CreateFormatResponse);
+  rpc UpdateFormat(UpdateFormatRequest) returns (UpdateFormatResponse);
+  rpc DeleteFormat(DeleteFormatRequest) returns (DeleteFormatResponse);
+
+  rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);
+  rpc CreateProfile(CreateProfileRequest) returns (CreateProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
+
+  rpc ScoreRelease(ScoreReleaseRequest) returns (ScoreReleaseResponse);
+  rpc ParseQuality(ParseQualityRequest) returns (ParseQualityResponse);
+}
+
+// ── Custom Formats ────────────────────────────────────────────
+
+message CustomFormat {
+  string id = 1;
+  string name = 2;
+  repeated FormatRule rules = 3;
+  int32 default_score = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message FormatRule {
+  string field = 1;    // "title", "size", "seeders"
+  string op = 2;       // "matches", "contains", "gt", "lt", "gte", "lte"
+  string value = 3;    // regex or comparison value
+  bool negate = 4;
+}
+
+message ListFormatsRequest {}
+
+message ListFormatsResponse {
+  repeated CustomFormat formats = 1;
+}
+
+message CreateFormatRequest {
+  string name = 1;
+  repeated FormatRule rules = 2;
+  int32 default_score = 3;
+}
+
+message CreateFormatResponse {
+  CustomFormat format = 1;
+}
+
+message UpdateFormatRequest {
+  string id = 1;
+  string name = 2;
+  repeated FormatRule rules = 3;
+  int32 default_score = 4;
+}
+
+message UpdateFormatResponse {
+  CustomFormat format = 1;
+}
+
+message DeleteFormatRequest {
+  string id = 1;
+}
+
+message DeleteFormatResponse {}
+
+// ── Quality Profiles ───────────────────────────────────────────
+
+message QualityProfile {
+  string id = 1;
+  string name = 2;
+  int32 min_score = 3;
+  int32 cutoff_score = 4;
+  bool upgrade_allowed = 5;
+  int32 upgrade_delay_minutes = 6;
+  map<string, int32> format_scores = 7;  // format_id → score
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+message ListProfilesRequest {}
+
+message ListProfilesResponse {
+  repeated QualityProfile profiles = 1;
+}
+
+message CreateProfileRequest {
+  string name = 1;
+  int32 min_score = 2;
+  int32 cutoff_score = 3;
+  bool upgrade_allowed = 4;
+  int32 upgrade_delay_minutes = 5;
+  map<string, int32> format_scores = 6;
+}
+
+message CreateProfileResponse {
+  QualityProfile profile = 1;
+}
+
+message UpdateProfileRequest {
+  string id = 1;
+  string name = 2;
+  int32 min_score = 3;
+  int32 cutoff_score = 4;
+  bool upgrade_allowed = 5;
+  int32 upgrade_delay_minutes = 6;
+  map<string, int32> format_scores = 7;
+}
+
+message UpdateProfileResponse {
+  QualityProfile profile = 1;
+}
+
+message DeleteProfileRequest {
+  string id = 1;
+}
+
+message DeleteProfileResponse {}
+
+// ── Scoring ────────────────────────────────────────────────────
+
+message ScoreReleaseRequest {
+  string title = 1;
+  int64 size = 2;
+  int32 seeders = 3;
+  string category = 4;
+  string sub_category = 5;
+  string download_protocol = 6;
+  string profile_id = 7;  // optional, uses first profile if empty
+}
+
+message ScoreReleaseResponse {
+  int32 total_score = 1;
+  int32 quality_score = 2;
+  int32 format_score = 3;
+  repeated FormatMatch format_matches = 4;
+  QualityInfo quality = 5;
+}
+
+message FormatMatch {
+  string format_id = 1;
+  string format_name = 2;
+  int32 score = 3;
+  string rule_matched = 4;
+}
+
+message QualityInfo {
+  string resolution = 1;  // "2160p", "1080p", etc.
+  string source = 2;       // "Remux", "BluRay", "WEB-DL", "HDTV"
+  string codec = 3;        // "h264", "hevc", "av1"
+  bool hdr = 4;
+  string label = 5;
+  int32 score = 6;
+}
+
+message ParseQualityRequest {
+  string title = 1;
+}
+
+message ParseQualityResponse {
+  QualityInfo quality = 1;
+}
