@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	mod := internal.NewModule(internal.Config{})
-	insecure := os.Getenv("MUXCORE_GRPC_INSECURE") == "true"
+	mod := internal.NewModule(internal.Config{SeedDefaults: true})
+	insecure := os.Getenv("MUXCORE_INSECURE_DISABLE_TLS") == "true" || os.Getenv("MUXCORE_GRPC_INSECURE") == "true"
 	if err := modulesdk.Run(modulesdk.Config{
 		Module:   mod,
 		Insecure: insecure,
