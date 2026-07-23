@@ -30,17 +30,19 @@ type Module struct {
 	mu sync.RWMutex
 	db *sql.DB
 
-	id       string
-	dbPath   string
-	grpcAddr string
-	grpcSrv  *grpc.Server
-	grpcLis  net.Listener
+	id           string
+	dbPath       string
+	grpcAddr     string
+	seedDefaults bool
+	grpcSrv      *grpc.Server
+	grpcLis      net.Listener
 }
 
 type Config struct {
-	ID       string
-	DBPath   string
-	GRPCAddr string
+	ID           string
+	DBPath       string
+	GRPCAddr     string
+	SeedDefaults bool
 }
 
 func NewModule(cfg Config) *Module {
@@ -59,10 +61,14 @@ func NewModule(cfg Config) *Module {
 	if v := os.Getenv("FORMATS_GRPC_ADDR"); v != "" {
 		cfg.GRPCAddr = v
 	}
+	if os.Getenv("FORMATS_SEED_DEFAULTS") == "true" {
+		cfg.SeedDefaults = true
+	}
 	return &Module{
-		id:       cfg.ID,
-		dbPath:   cfg.DBPath,
-		grpcAddr: cfg.GRPCAddr,
+		id:           cfg.ID,
+		dbPath:       cfg.DBPath,
+		grpcAddr:     cfg.GRPCAddr,
+		seedDefaults: cfg.SeedDefaults,
 	}
 }
 
@@ -125,10 +131,19 @@ func (m *Module) Init(ctx context.Context) error {
 		db.Close()
 		return fmt.Errorf("create quality_profiles table: %w", err)
 	}
+	if err := m.migrateReleaseGroups(ctx, db); err != nil {
+		db.Close()
+		return fmt.Errorf("create release_profile_groups: %w", err)
+	}
 
 	m.mu.Lock()
 	m.db = db
 	m.mu.Unlock()
+
+	if m.seedDefaults {
+		m.seedDefaultFormats(ctx)
+		m.seedDefaultReleaseGroups(ctx)
+	}
 
 	lis, err := net.Listen("tcp", m.grpcAddr)
 	if err != nil {
@@ -359,10 +374,24 @@ func (m *Module) ScoreRelease(ctx context.Context, req *formatsv1.ScoreReleaseRe
 
 	totalScore := quality.GetScore() + totalFormatScore
 
+	m.mu.RLock()
+	groups := m.loadReleaseGroups()
+	m.mu.RUnlock()
+	scored, ok := applyReleaseGroups(req.GetTitle(), groups, totalScore)
+	if !ok {
+		return &formatsv1.ScoreReleaseResponse{
+			TotalScore:    -100000,
+			QualityScore:  quality.GetScore(),
+			FormatScore:   totalFormatScore,
+			FormatMatches: formatMatches,
+			Quality:       quality,
+		}, nil
+	}
+
 	return &formatsv1.ScoreReleaseResponse{
-		TotalScore:    int32(totalScore),
+		TotalScore:    scored,
 		QualityScore:  quality.GetScore(),
-		FormatScore:   int32(totalFormatScore),
+		FormatScore:   totalFormatScore,
 		FormatMatches: formatMatches,
 		Quality:       quality,
 	}, nil
