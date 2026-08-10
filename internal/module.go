@@ -76,11 +76,11 @@ func (m *Module) Info() contracts.ModuleInfo {
 	return contracts.ModuleInfo{
 		ID:             m.id,
 		Name:           "Custom Formats",
-		Version:      "0.1.5",
+		Version:      "0.1.6",
 		Roles:          []string{"scoring"},
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
-		Capabilities:   []string{"media.scoring", "media.formats"},
+		Capabilities:   []string{"media.scoring", "media.formats", "settings"},
 		MinCoreVersion: "0.4.0",
 		HTTPAddr:       m.grpcAddr,
 	}
