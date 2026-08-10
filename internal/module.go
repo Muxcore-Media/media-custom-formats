@@ -76,7 +76,7 @@ func (m *Module) Info() contracts.ModuleInfo {
 	return contracts.ModuleInfo{
 		ID:             m.id,
 		Name:           "Custom Formats",
-		Version:        "0.1.0",
+		Version:        "0.1.4",
 		Roles:          []string{"scoring"},
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
@@ -159,6 +159,7 @@ func (m *Module) Init(ctx context.Context) error {
 func (m *Module) Start(ctx context.Context) error {
 	m.grpcSrv = grpc.NewServer()
 	formatsv1.RegisterFormatServiceServer(m.grpcSrv, m)
+	m.registerSettingsMesh(m.grpcSrv)
 
 	go func() {
 		slog.Info("media-custom-formats gRPC started", "addr", m.grpcAddr)

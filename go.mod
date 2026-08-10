@@ -3,8 +3,8 @@ module github.com/Muxcore-Media/media-custom-formats
 go 1.26.4
 
 require (
-	github.com/Muxcore-Media/core/pkg/contracts v0.5.1
-	github.com/Muxcore-Media/core/sdk/go/module v0.5.1
+	github.com/Muxcore-Media/core/pkg/contracts v0.5.2
+	github.com/Muxcore-Media/core/sdk/go/module v0.5.2
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.52.0
