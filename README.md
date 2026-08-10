@@ -25,7 +25,27 @@ Release title/size/seeders ──→ media-custom-formats ──→ Score + qual
 - **Custom formats** — CRUD for named rule sets (`matches` / `contains` / numeric ops) with default scores
 - **Quality profiles** — min/cutoff scores, upgrade settings, per-format score overrides
 - **ScoreRelease / ParseQuality** — combine quality heuristics with format matches
-- **Default seeds** — on empty DB, seeds Remux/HDR/x265/Proper/CAM formats and release groups (enabled by default in the binary)
+- **Default seeds** — on empty DB, seeds Remux/HDR/x265/Proper/CAM formats and a Default Blocklist release group (enabled by default in the binary)
+
+### Default seeded custom formats
+
+Inserted only when `custom_formats` is empty (`SeedDefaults` / `FORMATS_SEED_DEFAULTS=true` / binary default):
+
+| ID | Name | Score | Rule |
+|----|------|------:|------|
+| `cf_seed_remux` | Remux | +100 | title `contains` `Remux` |
+| `cf_seed_hdr` | HDR | +50 | title `matches` `(?i)\bHDR(10\|10\+|)?\b` |
+| `cf_seed_x265` | x265/HEVC | +25 | title `matches` `(?i)x265\|h\.?265\|hevc` |
+| `cf_seed_proper` | Proper/Repack | +20 | title `matches` `(?i)\b(proper\|repack)\b` |
+| `cf_seed_cam` | CAM/TS | −10000 | title `matches` `(?i)\b(cam\|hdcam\|telesync\|hdts\|tc)\b` |
+
+### Default seeded release profile group
+
+| ID | Name | Behavior |
+|----|------|----------|
+| `rpg_seed_default` | Default Blocklist | `must_not_contain`: cam, telesync, hdcam; `preferred`: bluray, remux, web-dl (+15 preferred score) |
+
+Admin UI: **Custom Formats** at `/formats`, quality profiles at `/formats/profiles` (admin-ui → media-custom-formats gRPC).
 
 ---
 
