@@ -23,6 +23,52 @@ func newTestModule(t *testing.T) *Module {
 	return m
 }
 
+func TestSeedDefaults(t *testing.T) {
+	m := NewModule(Config{
+		DBPath:       filepath.Join(t.TempDir(), "formats.db"),
+		GRPCAddr:     "127.0.0.1:0",
+		SeedDefaults: true,
+	})
+	ctx := context.Background()
+	if err := m.Init(ctx); err != nil {
+		t.Fatalf("Init: %v", err)
+	}
+	t.Cleanup(func() { _ = m.Stop(ctx) })
+
+	list, err := m.ListFormats(ctx, &formatsv1.ListFormatsRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]int32{
+		"Remux":        100,
+		"HDR":          50,
+		"x265/HEVC":    25,
+		"Proper/Repack": 20,
+		"CAM/TS":       -10000,
+	}
+	if len(list.Formats) != len(want) {
+		t.Fatalf("seeded formats = %d want %d", len(list.Formats), len(want))
+	}
+	for _, f := range list.Formats {
+		score, ok := want[f.GetName()]
+		if !ok {
+			t.Fatalf("unexpected seed %q", f.GetName())
+		}
+		if f.GetDefaultScore() != score {
+			t.Fatalf("%s score = %d want %d", f.GetName(), f.GetDefaultScore(), score)
+		}
+	}
+
+	var groupName string
+	err = m.db.QueryRowContext(ctx, `SELECT name FROM release_profile_groups WHERE id = ?`, "rpg_seed_default").Scan(&groupName)
+	if err != nil {
+		t.Fatalf("seeded release group: %v", err)
+	}
+	if groupName != "Default Blocklist" {
+		t.Fatalf("release group name = %q", groupName)
+	}
+}
+
 func TestModuleInfo(t *testing.T) {
 	m := NewModule(Config{})
 	info := m.Info()
