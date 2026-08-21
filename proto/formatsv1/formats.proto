@@ -15,6 +15,14 @@ service FormatService {
 
   rpc ScoreRelease(ScoreReleaseRequest) returns (ScoreReleaseResponse);
   rpc ParseQuality(ParseQualityRequest) returns (ParseQualityResponse);
+
+  rpc ListReleaseProfiles(ListReleaseProfilesRequest) returns (ListReleaseProfilesResponse);
+  rpc UpsertReleaseProfile(UpsertReleaseProfileRequest) returns (UpsertReleaseProfileResponse);
+  rpc DeleteReleaseProfile(DeleteReleaseProfileRequest) returns (DeleteReleaseProfileResponse);
+
+  // SyncTrashGuides imports custom formats (and optionally quality profiles) from a
+  // TRaSH Guides tree (local path or downloaded archive). Formats are upserted by trash_id.
+  rpc SyncTrashGuides(SyncTrashGuidesRequest) returns (SyncTrashGuidesResponse);
 }
 
 // ── Custom Formats ────────────────────────────────────────────
@@ -26,13 +34,16 @@ message CustomFormat {
   int32 default_score = 4;
   string created_at = 5;
   string updated_at = 6;
+  string trash_id = 7;      // TRaSH Guides trash_id when imported
+  string trash_service = 8; // "radarr" | "sonarr" when imported
 }
 
 message FormatRule {
-  string field = 1;    // "title", "size", "seeders"
-  string op = 2;       // "matches", "contains", "gt", "lt", "gte", "lte"
+  string field = 1;    // "title", "size", "seeders", "resolution", "source", "quality_modifier", "release_group", "language"
+  string op = 2;       // "matches", "contains", "gt", "lt", "gte", "lte", "eq"
   string value = 3;    // regex or comparison value
   bool negate = 4;
+  bool required = 5;   // Arr/TRaSH semantics: all required must match; at least one optional if any exist
 }
 
 message ListFormatsRequest {}
@@ -164,3 +175,62 @@ message ParseQualityRequest {
 message ParseQualityResponse {
   QualityInfo quality = 1;
 }
+
+message ReleaseProfile {
+  string id = 1;
+  string name = 2;
+  repeated string preferred = 3;
+  repeated string must_contain = 4;
+  repeated string must_not_contain = 5;
+  int32 preferred_score = 6;
+  bool enabled = 7;
+}
+
+message ListReleaseProfilesRequest {}
+
+message ListReleaseProfilesResponse {
+  repeated ReleaseProfile profiles = 1;
+}
+
+message UpsertReleaseProfileRequest {
+  string id = 1; // empty = create
+  string name = 2;
+  repeated string preferred = 3;
+  repeated string must_contain = 4;
+  repeated string must_not_contain = 5;
+  int32 preferred_score = 6;
+  bool enabled = 7;
+}
+
+message UpsertReleaseProfileResponse {
+  ReleaseProfile profile = 1;
+}
+
+message DeleteReleaseProfileRequest {
+  string id = 1;
+}
+
+message DeleteReleaseProfileResponse {}
+
+// ── TRaSH Guides sync ──────────────────────────────────────────
+
+message SyncTrashGuidesRequest {
+  // Local path to a TRaSH Guides repo root (must contain metadata.json). Empty uses
+  // FORMATS_TRASH_GUIDES_PATH or downloads FORMATS_TRASH_GUIDES_URL into the cache dir.
+  string path = 1;
+  // trash_scores key to apply (default, german, anime-radarr, …). Empty → "default".
+  string score_set = 2;
+  // When true, also upsert quality profiles from the guides tree.
+  bool import_profiles = 3;
+  // Services to import: "radarr", "sonarr". Empty → both.
+  repeated string services = 4;
+}
+
+message SyncTrashGuidesResponse {
+  int32 formats_upserted = 1;
+  int32 formats_skipped = 2;
+  int32 profiles_upserted = 3;
+  string guides_path = 4;
+  repeated string warnings = 5;
+}
+

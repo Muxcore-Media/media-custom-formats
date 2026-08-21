@@ -40,11 +40,11 @@ func TestSeedDefaults(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]int32{
-		"Remux":        100,
-		"HDR":          50,
-		"x265/HEVC":    25,
+		"Remux":         100,
+		"HDR":           50,
+		"x265/HEVC":     25,
 		"Proper/Repack": 20,
-		"CAM/TS":       -10000,
+		"CAM/TS":        -10000,
 	}
 	if len(list.Formats) != len(want) {
 		t.Fatalf("seeded formats = %d want %d", len(list.Formats), len(want))
@@ -347,7 +347,7 @@ func TestMatchRule(t *testing.T) {
 		rule := &formatsv1.FormatRule{
 			Field: tt.field, Op: tt.op, Value: tt.value, Negate: tt.negate,
 		}
-		got := matchRule(rule, tt.title, tt.size, tt.seeders)
+		got := matchRule(rule, tt.title, tt.size, tt.seeders, parseQualityFromTitle(tt.title))
 		if got != tt.want {
 			t.Errorf("matchRule(%q,%q,%q) on %q = %v, want %v", tt.field, tt.op, tt.value, tt.title, got, tt.want)
 		}

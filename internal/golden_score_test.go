@@ -29,15 +29,15 @@ func TestScoreReleaseGoldenSeeds(t *testing.T) {
 	ctx := context.Background()
 
 	cases := []struct {
-		name           string
-		title          string
-		wantTotal      int32
-		wantQuality    int32
-		wantFmtMin     int32 // format score lower bound (CAM / rejection paths may vary)
-		wantRejected   bool
-		wantRes        string
-		wantSource     string
-		wantFmtNames   []string
+		name         string
+		title        string
+		wantTotal    int32
+		wantQuality  int32
+		wantFmtMin   int32 // format score lower bound (CAM / rejection paths may vary)
+		wantRejected bool
+		wantRes      string
+		wantSource   string
+		wantFmtNames []string
 	}{
 		{
 			name:         "1080p_bluray",
@@ -58,12 +58,12 @@ func TestScoreReleaseGoldenSeeds(t *testing.T) {
 			wantFmtNames: []string{"Remux", "HDR", "x265/HEVC"},
 		},
 		{
-			name:         "720p_webdl",
-			title:        "Show.S01E01.720p.WEB-DL.x264",
-			wantQuality:  100, // 80 + 20
-			wantTotal:    115, // +15 preferred web-dl
-			wantRes:      "720p",
-			wantSource:   "WEB-DL",
+			name:        "720p_webdl",
+			title:       "Show.S01E01.720p.WEB-DL.x264",
+			wantQuality: 100, // 80 + 20
+			wantTotal:   115, // +15 preferred web-dl
+			wantRes:     "720p",
+			wantSource:  "WEB-DL",
 		},
 		{
 			name:         "cam_rejected",

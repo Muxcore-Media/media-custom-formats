@@ -9,16 +9,26 @@ import (
 func TestSettingsSeedDefaults(t *testing.T) {
 	m := NewModule(Config{GRPCAddr: ":0", SeedDefaults: true})
 	defs := m.Settings()
-	if len(defs) != 1 || defs[0].Key != "seed_defaults" || defs[0].Type != contracts.SettingTypeBool {
+	var seed *contracts.SettingDef
+	for i := range defs {
+		if defs[i].Key == "seed_defaults" {
+			seed = &defs[i]
+			break
+		}
+	}
+	if seed == nil || seed.Type != contracts.SettingTypeBool {
 		t.Fatalf("defs=%+v", defs)
 	}
-	if defs[0].Value != "true" {
-		t.Fatalf("value=%q", defs[0].Value)
+	if seed.Value != "true" {
+		t.Fatalf("value=%q", seed.Value)
 	}
 	if err := m.UpdateSetting("seed_defaults", "false"); err != nil {
 		t.Fatal(err)
 	}
-	if m.Settings()[0].Value != "false" {
-		t.Fatalf("after update %q", m.Settings()[0].Value)
+	defs = m.Settings()
+	for _, d := range defs {
+		if d.Key == "seed_defaults" && d.Value != "false" {
+			t.Fatalf("after update %q", d.Value)
+		}
 	}
 }

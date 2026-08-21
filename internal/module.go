@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dlclark/regexp2"
 	"google.golang.org/grpc"
 
 	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
@@ -36,6 +37,14 @@ type Module struct {
 	seedDefaults bool
 	grpcSrv      *grpc.Server
 	grpcLis      net.Listener
+
+	trashGuidesPath     string
+	trashGuidesURL      string
+	trashCacheDir       string
+	trashSyncOnStart    bool
+	trashScoreSet       string
+	trashImportProfiles bool
+	trashServices       []string
 }
 
 type Config struct {
@@ -43,6 +52,14 @@ type Config struct {
 	DBPath       string
 	GRPCAddr     string
 	SeedDefaults bool
+
+	TrashGuidesPath     string
+	TrashGuidesURL      string
+	TrashCacheDir       string
+	TrashSyncOnStart    bool
+	TrashScoreSet       string
+	TrashImportProfiles bool
+	TrashServices       []string
 }
 
 func NewModule(cfg Config) *Module {
@@ -64,19 +81,65 @@ func NewModule(cfg Config) *Module {
 	if os.Getenv("FORMATS_SEED_DEFAULTS") == "true" {
 		cfg.SeedDefaults = true
 	}
-	return &Module{
-		id:           cfg.ID,
-		dbPath:       cfg.DBPath,
-		grpcAddr:     cfg.GRPCAddr,
-		seedDefaults: cfg.SeedDefaults,
+	if v := os.Getenv("FORMATS_TRASH_GUIDES_PATH"); v != "" {
+		cfg.TrashGuidesPath = v
 	}
+	if v := os.Getenv("FORMATS_TRASH_GUIDES_URL"); v != "" {
+		cfg.TrashGuidesURL = v
+	}
+	if v := os.Getenv("FORMATS_TRASH_CACHE_DIR"); v != "" {
+		cfg.TrashCacheDir = v
+	}
+	if os.Getenv("FORMATS_TRASH_SYNC") == "true" {
+		cfg.TrashSyncOnStart = true
+	}
+	if v := os.Getenv("FORMATS_TRASH_SCORE_SET"); v != "" {
+		cfg.TrashScoreSet = v
+	}
+	if os.Getenv("FORMATS_TRASH_IMPORT_PROFILES") == "true" {
+		cfg.TrashImportProfiles = true
+	}
+	if v := os.Getenv("FORMATS_TRASH_SERVICES"); v != "" {
+		cfg.TrashServices = splitCSV(v)
+	}
+	if cfg.TrashScoreSet == "" {
+		cfg.TrashScoreSet = "default"
+	}
+	if cfg.TrashCacheDir == "" {
+		cfg.TrashCacheDir = "/var/lib/media-custom-formats/trash-guides"
+	}
+	return &Module{
+		id:                  cfg.ID,
+		dbPath:              cfg.DBPath,
+		grpcAddr:            cfg.GRPCAddr,
+		seedDefaults:        cfg.SeedDefaults,
+		trashGuidesPath:     cfg.TrashGuidesPath,
+		trashGuidesURL:      cfg.TrashGuidesURL,
+		trashCacheDir:       cfg.TrashCacheDir,
+		trashSyncOnStart:    cfg.TrashSyncOnStart,
+		trashScoreSet:       cfg.TrashScoreSet,
+		trashImportProfiles: cfg.TrashImportProfiles,
+		trashServices:       cfg.TrashServices,
+	}
+}
+
+func splitCSV(v string) []string {
+	parts := strings.Split(v, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(strings.ToLower(p))
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func (m *Module) Info() contracts.ModuleInfo {
 	return contracts.ModuleInfo{
 		ID:             m.id,
 		Name:           "Custom Formats",
-		Version:      "0.1.6",
+		Version:        "0.1.9",
 		Roles:          []string{"scoring"},
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
@@ -108,12 +171,20 @@ func (m *Module) Init(ctx context.Context) error {
 			name          TEXT NOT NULL UNIQUE,
 			rules_json    TEXT NOT NULL DEFAULT '[]',
 			default_score INTEGER NOT NULL DEFAULT 0,
+			trash_id      TEXT NOT NULL DEFAULT '',
+			trash_service TEXT NOT NULL DEFAULT '',
 			created_at    TEXT NOT NULL,
 			updated_at    TEXT NOT NULL
 		)
 	`); err != nil {
 		db.Close()
 		return fmt.Errorf("create custom_formats table: %w", err)
+	}
+	for _, col := range []string{
+		`ALTER TABLE custom_formats ADD COLUMN trash_id TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE custom_formats ADD COLUMN trash_service TEXT NOT NULL DEFAULT ''`,
+	} {
+		_, _ = db.ExecContext(ctx, col) // ignore if already present
 	}
 	if _, err := db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS quality_profiles (
@@ -140,8 +211,15 @@ func (m *Module) Init(ctx context.Context) error {
 	m.db = db
 	m.mu.Unlock()
 
-	if m.seedDefaults {
+	synced := false
+	if m.trashSyncOnStart {
+		synced = m.maybeSyncTrashOnStart(ctx)
+	}
+	// Lightweight seeds when trash sync is off, or as fallback if sync failed.
+	if m.seedDefaults && !synced {
 		m.seedDefaultFormats(ctx)
+	}
+	if m.seedDefaults {
 		m.seedDefaultReleaseGroups(ctx)
 	}
 
@@ -316,7 +394,9 @@ var (
 	reResolution = regexp.MustCompile(`(?i)(\d{3,4})[pi]`)
 	reRemux      = regexp.MustCompile(`(?i)remux`)
 	reBluRay     = regexp.MustCompile(`(?i)bluray|brrip|bdrip|blu-ray|blu.?ray`)
-	reWebDL      = regexp.MustCompile(`(?i)web[-\s]?dl|webdl|webrip|web.?dl`)
+	reBRDisk     = regexp.MustCompile(`(?i)\b(br[-\s]?disk|bd[-\s]?disk)\b`)
+	reWebRip     = regexp.MustCompile(`(?i)web[-\s]?rip|webrip`)
+	reWebDL      = regexp.MustCompile(`(?i)web[-\s]?dl|webdl`)
 	reHDTV       = regexp.MustCompile(`(?i)hdtv|hd.?tv`)
 	reCam        = regexp.MustCompile(`(?i)cam|ts|tc|hdts|hd-cam`)
 	reRawHD      = regexp.MustCompile(`(?i)rawhd|raw.?hd`)
@@ -355,7 +435,10 @@ func (m *Module) ScoreRelease(ctx context.Context, req *formatsv1.ScoreReleaseRe
 	var formatMatches []*formatsv1.FormatMatch
 	var totalFormatScore int32
 	for _, f := range formats {
-		matched, rule := matchFormat(f, req.GetTitle(), req.GetSize(), req.GetSeeders())
+		if !trashServiceAllowed(f.GetTrashService(), req.GetCategory(), req.GetSubCategory()) {
+			continue
+		}
+		matched, rule := matchFormat(f, req.GetTitle(), req.GetSize(), req.GetSeeders(), quality)
 		if matched {
 			score := f.GetDefaultScore()
 			if profile != nil {
@@ -418,10 +501,14 @@ func parseQualityFromTitle(title string) *formatsv1.QualityInfo {
 	switch {
 	case reRemux.MatchString(title):
 		q.Source = "Remux"
+	case reBRDisk.MatchString(title):
+		q.Source = "BR-DISK"
 	case reBluRay.MatchString(title):
 		q.Source = "BluRay"
 	case reRawHD.MatchString(title):
 		q.Source = "RawHD"
+	case reWebRip.MatchString(title):
+		q.Source = "WEBRip"
 	case reWebDL.MatchString(title):
 		q.Source = "WEB-DL"
 	case reHDTV.MatchString(title):
@@ -488,10 +575,12 @@ func qualityScore(resolution, source string, hdr bool) int {
 		score += 30
 	case "RawHD":
 		score += 25
-	case "WEB-DL":
+	case "WEB-DL", "WEBRip":
 		score += 20
 	case "HDTV":
 		score += 10
+	case "BR-DISK":
+		score -= 50
 	case "CAM":
 		score -= 100
 	}
@@ -517,30 +606,141 @@ func qualityLabel(resolution, source string, hdr bool, codec string) string {
 	return strings.Join(parts, " ")
 }
 
-func matchFormat(f *formatsv1.CustomFormat, title string, size int64, seeders int32) (bool, string) {
-	if len(f.GetRules()) == 0 {
+func trashServiceAllowed(service, category, subCategory string) bool {
+	if service == "" {
+		return true
+	}
+	cat := strings.ToLower(strings.TrimSpace(category + " " + subCategory))
+	if cat == "" {
+		return true
+	}
+	switch service {
+	case "radarr":
+		if strings.Contains(cat, "tv") || strings.Contains(cat, "show") || strings.Contains(cat, "series") || strings.Contains(cat, "episode") {
+			return false
+		}
+	case "sonarr":
+		if strings.Contains(cat, "movie") || strings.Contains(cat, "film") {
+			return false
+		}
+	}
+	return true
+}
+
+func matchFormat(f *formatsv1.CustomFormat, title string, size int64, seeders int32, quality *formatsv1.QualityInfo) (bool, string) {
+	rules := f.GetRules()
+	if len(rules) == 0 {
 		return true, ""
 	}
-	for _, rule := range f.GetRules() {
-		if matchRule(rule, title, size, seeders) {
-			return true, rule.GetValue()
+
+	var required, optional []*formatsv1.FormatRule
+	for _, rule := range rules {
+		if rule.GetRequired() {
+			required = append(required, rule)
+		} else {
+			optional = append(optional, rule)
 		}
+	}
+	// Legacy formats (no required flags): treat all rules as optional → any-match (prior OR behavior).
+	if len(required) == 0 && len(optional) == 0 {
+		optional = rules
+	}
+
+	var matchedRule string
+	for _, rule := range required {
+		ok, detail := matchRuleDetail(rule, title, size, seeders, quality)
+		if !ok {
+			return false, ""
+		}
+		if matchedRule == "" {
+			matchedRule = detail
+		}
+	}
+	if len(optional) > 0 {
+		any := false
+		for _, rule := range optional {
+			ok, detail := matchRuleDetail(rule, title, size, seeders, quality)
+			if ok {
+				any = true
+				if matchedRule == "" {
+					matchedRule = detail
+				}
+				break
+			}
+		}
+		if !any {
+			return false, ""
+		}
+	}
+	return true, matchedRule
+}
+
+func matchRuleDetail(rule *formatsv1.FormatRule, title string, size int64, seeders int32, quality *formatsv1.QualityInfo) (bool, string) {
+	matched := matchRule(rule, title, size, seeders, quality)
+	if matched {
+		return true, rule.GetValue()
 	}
 	return false, ""
 }
 
-func matchRule(rule *formatsv1.FormatRule, title string, size int64, seeders int32) bool {
+func matchRule(rule *formatsv1.FormatRule, title string, size int64, seeders int32, quality *formatsv1.QualityInfo) bool {
 	matched := false
 	switch rule.GetField() {
 	case "title":
 		switch rule.GetOp() {
 		case "matches":
-			re, err := regexp.Compile(rule.GetValue())
-			if err == nil {
-				matched = re.MatchString(title)
-			}
+			matched = matchRegex(rule.GetValue(), title, true)
 		case "contains":
 			matched = strings.Contains(strings.ToLower(title), strings.ToLower(rule.GetValue()))
+		}
+	case "release_group":
+		grp := extractReleaseGroup(title)
+		switch rule.GetOp() {
+		case "matches":
+			matched = matchRegex(rule.GetValue(), grp, false)
+		case "contains", "eq":
+			matched = strings.EqualFold(grp, rule.GetValue()) || matchRegex(rule.GetValue(), grp, false)
+		}
+	case "resolution":
+		want, err := strconv.Atoi(strings.TrimSpace(rule.GetValue()))
+		got := 0
+		if quality != nil {
+			got = resolutionNumber(quality.GetResolution())
+		}
+		if got == 0 {
+			got = parseResolution(title)
+		}
+		if err == nil {
+			switch rule.GetOp() {
+			case "eq", "":
+				matched = got == want
+			case "gt":
+				matched = got > want
+			case "lt":
+				matched = got < want
+			case "gte":
+				matched = got >= want
+			case "lte":
+				matched = got <= want
+			}
+		}
+	case "source":
+		got := 0
+		if quality != nil {
+			got = sourceNumber(quality.GetSource())
+		}
+		want, err := strconv.Atoi(strings.TrimSpace(rule.GetValue()))
+		if err == nil {
+			matched = got == want
+		}
+	case "quality_modifier":
+		got := 0
+		if quality != nil {
+			got = qualityModifierNumber(quality.GetSource())
+		}
+		want, err := strconv.Atoi(strings.TrimSpace(rule.GetValue()))
+		if err == nil {
+			matched = got == want
 		}
 	case "size":
 		threshold, err := strconv.ParseInt(rule.GetValue(), 10, 64)
@@ -577,12 +777,113 @@ func matchRule(rule *formatsv1.FormatRule, title string, size int64, seeders int
 	return matched
 }
 
+func matchRegex(pattern, text string, ignoreCase bool) bool {
+	if pattern == "" {
+		return false
+	}
+	re2pat := pattern
+	if ignoreCase && !strings.HasPrefix(pattern, "(?i)") && !strings.HasPrefix(pattern, "(?I)") {
+		re2pat = "(?i)" + pattern
+	}
+	if re, err := regexp.Compile(re2pat); err == nil {
+		return re.MatchString(text)
+	}
+	var opts regexp2.RegexOptions
+	if ignoreCase {
+		opts = regexp2.IgnoreCase
+	}
+	re, err := regexp2.Compile(pattern, opts)
+	if err != nil {
+		return false
+	}
+	ok, _ := re.MatchString(text)
+	return ok
+}
+
+func extractReleaseGroup(title string) string {
+	base := title
+	if i := strings.LastIndex(base, "."); i > 0 {
+		ext := strings.ToLower(base[i+1:])
+		if len(ext) <= 4 && !strings.ContainsAny(ext, " .-_") {
+			base = base[:i]
+		}
+	}
+	if i := strings.LastIndex(base, "-"); i >= 0 && i < len(base)-1 {
+		return base[i+1:]
+	}
+	return base
+}
+
+func resolutionNumber(label string) int {
+	switch strings.ToLower(label) {
+	case "2160p":
+		return 2160
+	case "1080p":
+		return 1080
+	case "720p":
+		return 720
+	case "576p":
+		return 576
+	case "480p":
+		return 480
+	default:
+		return 0
+	}
+}
+
+// Radarr Source enum (subset used by TRaSH Guides).
+func sourceNumber(source string) int {
+	switch source {
+	case "CAM":
+		return 1
+	case "DVD":
+		return 5
+	case "HDTV", "TV":
+		return 6
+	case "WEB-DL":
+		return 7
+	case "WEBRip":
+		return 8
+	case "BluRay", "Remux", "BR-DISK":
+		return 9
+	default:
+		return 0
+	}
+}
+
+// Radarr QualityModifier: Remux=5, BRDISK=4, RAWHD=3, …
+func qualityModifierNumber(source string) int {
+	switch source {
+	case "Remux":
+		return 5
+	case "BR-DISK":
+		return 4
+	case "RawHD":
+		return 3
+	default:
+		return 0
+	}
+}
+
 // ── DB load helpers ────────────────────────────────────────────
 
 func (m *Module) loadFormats() []*formatsv1.CustomFormat {
-	rows, err := m.db.Query(`SELECT id, name, rules_json, default_score, created_at, updated_at FROM custom_formats ORDER BY name`)
+	rows, err := m.db.Query(`SELECT id, name, rules_json, default_score, created_at, updated_at, trash_id, trash_service FROM custom_formats ORDER BY name`)
 	if err != nil {
-		return nil
+		// Older DBs without trash columns
+		rows, err = m.db.Query(`SELECT id, name, rules_json, default_score, created_at, updated_at FROM custom_formats ORDER BY name`)
+		if err != nil {
+			return nil
+		}
+		defer rows.Close()
+		var formats []*formatsv1.CustomFormat
+		for rows.Next() {
+			f := scanFormatLegacy(rows)
+			if f != nil {
+				formats = append(formats, f)
+			}
+		}
+		return formats
 	}
 	defer rows.Close()
 
@@ -597,11 +898,30 @@ func (m *Module) loadFormats() []*formatsv1.CustomFormat {
 }
 
 func (m *Module) loadFormat(id string) *formatsv1.CustomFormat {
-	row := m.db.QueryRow(`SELECT id, name, rules_json, default_score, created_at, updated_at FROM custom_formats WHERE id = ?`, id)
-	return scanFormatRow(row)
+	row := m.db.QueryRow(`SELECT id, name, rules_json, default_score, created_at, updated_at, trash_id, trash_service FROM custom_formats WHERE id = ?`, id)
+	if f := scanFormatRow(row); f != nil {
+		return f
+	}
+	row = m.db.QueryRow(`SELECT id, name, rules_json, default_score, created_at, updated_at FROM custom_formats WHERE id = ?`, id)
+	return scanFormatRowLegacy(row)
 }
 
 func scanFormat(rows *sql.Rows) *formatsv1.CustomFormat {
+	var id, name, rulesJSON, createdAt, updatedAt, trashID, trashService string
+	var defaultScore int64
+	if err := rows.Scan(&id, &name, &rulesJSON, &defaultScore, &createdAt, &updatedAt, &trashID, &trashService); err != nil {
+		return nil
+	}
+	f := &formatsv1.CustomFormat{
+		Id: id, Name: name, DefaultScore: int32(defaultScore),
+		CreatedAt: createdAt, UpdatedAt: updatedAt,
+		TrashId: trashID, TrashService: trashService,
+	}
+	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	return f
+}
+
+func scanFormatLegacy(rows *sql.Rows) *formatsv1.CustomFormat {
 	var id, name, rulesJSON, createdAt, updatedAt string
 	var defaultScore int64
 	if err := rows.Scan(&id, &name, &rulesJSON, &defaultScore, &createdAt, &updatedAt); err != nil {
@@ -616,6 +936,21 @@ func scanFormat(rows *sql.Rows) *formatsv1.CustomFormat {
 }
 
 func scanFormatRow(row *sql.Row) *formatsv1.CustomFormat {
+	var id, name, rulesJSON, createdAt, updatedAt, trashID, trashService string
+	var defaultScore int64
+	if err := row.Scan(&id, &name, &rulesJSON, &defaultScore, &createdAt, &updatedAt, &trashID, &trashService); err != nil {
+		return nil
+	}
+	f := &formatsv1.CustomFormat{
+		Id: id, Name: name, DefaultScore: int32(defaultScore),
+		CreatedAt: createdAt, UpdatedAt: updatedAt,
+		TrashId: trashID, TrashService: trashService,
+	}
+	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	return f
+}
+
+func scanFormatRowLegacy(row *sql.Row) *formatsv1.CustomFormat {
 	var id, name, rulesJSON, createdAt, updatedAt string
 	var defaultScore int64
 	if err := row.Scan(&id, &name, &rulesJSON, &defaultScore, &createdAt, &updatedAt); err != nil {

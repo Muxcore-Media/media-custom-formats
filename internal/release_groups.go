@@ -10,13 +10,13 @@ import (
 )
 
 type releaseProfileGroup struct {
-	ID              string   `json:"id"`
-	Name            string   `json:"name"`
-	Preferred       []string `json:"preferred"`
-	MustContain     []string `json:"must_contain"`
-	MustNotContain  []string `json:"must_not_contain"`
-	PreferredScore  int32    `json:"preferred_score"`
-	Enabled         bool     `json:"enabled"`
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Preferred      []string `json:"preferred"`
+	MustContain    []string `json:"must_contain"`
+	MustNotContain []string `json:"must_not_contain"`
+	PreferredScore int32    `json:"preferred_score"`
+	Enabled        bool     `json:"enabled"`
 }
 
 func (m *Module) migrateReleaseGroups(ctx context.Context, db *sql.DB) error {
