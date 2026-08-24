@@ -28,7 +28,7 @@ func TestFullTrashGuidesTree(t *testing.T) {
 	if err := m.Init(ctx); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { m.Stop(ctx) })
+	t.Cleanup(func() { _ = m.Stop(ctx) })
 	resp, err := m.SyncTrashGuides(ctx, &formatsv1.SyncTrashGuidesRequest{
 		Path:           root,
 		ImportProfiles: true,

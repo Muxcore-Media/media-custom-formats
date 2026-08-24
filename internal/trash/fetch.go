@@ -67,7 +67,7 @@ func downloadAndExtract(url, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("download trash guides: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download trash guides: HTTP %s", resp.Status)
 	}
@@ -75,7 +75,7 @@ func downloadAndExtract(url, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("gzip: %w", err)
 	}
-	defer gz.Close()
+	defer func() { _ = gz.Close() }()
 	tr := tar.NewReader(gz)
 	for {
 		hdr, err := tr.Next()
@@ -115,10 +115,10 @@ func downloadAndExtract(url, destDir string) error {
 				return err
 			}
 			if _, err := io.Copy(f, tr); err != nil {
-				f.Close()
+				_ = f.Close()
 				return err
 			}
-			f.Close()
+			_ = f.Close()
 		}
 	}
 	return nil

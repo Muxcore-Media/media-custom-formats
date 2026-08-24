@@ -41,7 +41,7 @@ func (m *Module) loadReleaseGroups() []releaseProfileGroup {
 	if err != nil {
 		return nil
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []releaseProfileGroup
 	for rows.Next() {
 		var id, name, raw string

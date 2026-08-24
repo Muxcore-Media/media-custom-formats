@@ -162,7 +162,7 @@ func (m *Module) Init(ctx context.Context) error {
 	db.SetMaxOpenConns(1)
 
 	if _, err := db.ExecContext(ctx, `PRAGMA journal_mode=WAL`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return fmt.Errorf("enable WAL: %w", err)
 	}
 	if _, err := db.ExecContext(ctx, `
@@ -177,7 +177,7 @@ func (m *Module) Init(ctx context.Context) error {
 			updated_at    TEXT NOT NULL
 		)
 	`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return fmt.Errorf("create custom_formats table: %w", err)
 	}
 	for _, col := range []string{
@@ -199,11 +199,11 @@ func (m *Module) Init(ctx context.Context) error {
 			updated_at          TEXT NOT NULL
 		)
 	`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return fmt.Errorf("create quality_profiles table: %w", err)
 	}
 	if err := m.migrateReleaseGroups(ctx, db); err != nil {
-		db.Close()
+		_ = db.Close()
 		return fmt.Errorf("create release_profile_groups: %w", err)
 	}
 
@@ -225,7 +225,7 @@ func (m *Module) Init(ctx context.Context) error {
 
 	lis, err := net.Listen("tcp", m.grpcAddr)
 	if err != nil {
-		db.Close()
+		_ = db.Close()
 		return fmt.Errorf("listen gRPC %s: %w", m.grpcAddr, err)
 	}
 	m.grpcLis = lis
@@ -254,7 +254,7 @@ func (m *Module) Stop(ctx context.Context) error {
 	}
 	m.mu.Lock()
 	if m.db != nil {
-		m.db.Close()
+		_ = m.db.Close()
 		m.db = nil
 	}
 	m.mu.Unlock()
@@ -875,7 +875,7 @@ func (m *Module) loadFormats() []*formatsv1.CustomFormat {
 		if err != nil {
 			return nil
 		}
-		defer rows.Close()
+		defer func() { _ = rows.Close() }()
 		var formats []*formatsv1.CustomFormat
 		for rows.Next() {
 			f := scanFormatLegacy(rows)
@@ -885,7 +885,7 @@ func (m *Module) loadFormats() []*formatsv1.CustomFormat {
 		}
 		return formats
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var formats []*formatsv1.CustomFormat
 	for rows.Next() {
@@ -917,7 +917,7 @@ func scanFormat(rows *sql.Rows) *formatsv1.CustomFormat {
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 		TrashId: trashID, TrashService: trashService,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	_ = json.Unmarshal([]byte(rulesJSON), &f.Rules)
 	return f
 }
 
@@ -931,7 +931,7 @@ func scanFormatLegacy(rows *sql.Rows) *formatsv1.CustomFormat {
 		Id: id, Name: name, DefaultScore: int32(defaultScore),
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	_ = json.Unmarshal([]byte(rulesJSON), &f.Rules)
 	return f
 }
 
@@ -946,7 +946,7 @@ func scanFormatRow(row *sql.Row) *formatsv1.CustomFormat {
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 		TrashId: trashID, TrashService: trashService,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	_ = json.Unmarshal([]byte(rulesJSON), &f.Rules)
 	return f
 }
 
@@ -960,7 +960,7 @@ func scanFormatRowLegacy(row *sql.Row) *formatsv1.CustomFormat {
 		Id: id, Name: name, DefaultScore: int32(defaultScore),
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	_ = json.Unmarshal([]byte(rulesJSON), &f.Rules)
 	return f
 }
 
@@ -969,7 +969,7 @@ func (m *Module) loadProfiles() []*formatsv1.QualityProfile {
 	if err != nil {
 		return nil
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var profiles []*formatsv1.QualityProfile
 	for rows.Next() {
@@ -1000,7 +1000,7 @@ func scanProfile(rows *sql.Rows) *formatsv1.QualityProfile {
 		FormatScores: make(map[string]int32),
 		CreatedAt:    createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
+	_ = json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
 	return p
 }
 
@@ -1018,7 +1018,7 @@ func scanProfileRow(row *sql.Row) *formatsv1.QualityProfile {
 		FormatScores: make(map[string]int32),
 		CreatedAt:    createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
+	_ = json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
 	return p
 }
 

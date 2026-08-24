@@ -8,19 +8,6 @@ import (
 	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 )
 
-func splitCSVLines(raw string) []string {
-	var out []string
-	for _, part := range strings.FieldsFunc(raw, func(r rune) bool {
-		return r == ',' || r == '\n' || r == ';'
-	}) {
-		part = strings.TrimSpace(part)
-		if part != "" {
-			out = append(out, part)
-		}
-	}
-	return out
-}
-
 func (m *Module) ListReleaseProfiles(ctx context.Context, _ *formatsv1.ListReleaseProfilesRequest) (*formatsv1.ListReleaseProfilesResponse, error) {
 	groups := m.loadReleaseGroups()
 	out := make([]*formatsv1.ReleaseProfile, 0, len(groups))
