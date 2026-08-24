@@ -19,7 +19,7 @@ func newTestModule(t *testing.T) *Module {
 	if err := m.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	t.Cleanup(func() { m.Stop(ctx) })
+	t.Cleanup(func() { _ = m.Stop(ctx) })
 	return m
 }
 
@@ -206,7 +206,7 @@ func TestDeleteProfile(t *testing.T) {
 	ctx := context.Background()
 
 	created, _ := m.CreateProfile(ctx, &formatsv1.CreateProfileRequest{Name: "Test", MinScore: 0, CutoffScore: 100})
-	m.DeleteProfile(ctx, &formatsv1.DeleteProfileRequest{Id: created.Profile.Id})
+	_, _ = m.DeleteProfile(ctx, &formatsv1.DeleteProfileRequest{Id: created.Profile.Id})
 
 	list, _ := m.ListProfiles(ctx, &formatsv1.ListProfilesRequest{})
 	if len(list.Profiles) != 0 {
@@ -270,14 +270,14 @@ func TestScoreReleaseWithFormats(t *testing.T) {
 	m := newTestModule(t)
 	ctx := context.Background()
 
-	m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
+	_, _ = m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
 		Name: "HDR",
 		Rules: []*formatsv1.FormatRule{
 			{Field: "title", Op: "matches", Value: "(?i)hdr|dolby.?vision"},
 		},
 		DefaultScore: 50,
 	})
-	m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
+	_, _ = m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
 		Name: "x265",
 		Rules: []*formatsv1.FormatRule{
 			{Field: "title", Op: "matches", Value: "(?i)x265|hevc"},
