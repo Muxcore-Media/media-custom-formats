@@ -4,7 +4,7 @@
 
 | Module Version | Core Version | Status |
 |----------------|-------------|--------|
-| v0.1.9         | v0.5.0+     | Current |
+| v0.1.9         | v0.5.8+     | Current |
 | v0.1.8         | v0.5.0+     | Compatible |
 | v0.1.2         | v0.5.0+     | Superseded |
 | v0.1.0         | v0.4.0+     | Superseded |

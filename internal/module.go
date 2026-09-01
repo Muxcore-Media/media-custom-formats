@@ -38,13 +38,15 @@ type Module struct {
 	grpcSrv      *grpc.Server
 	grpcLis      net.Listener
 
-	trashGuidesPath     string
-	trashGuidesURL      string
-	trashCacheDir       string
-	trashSyncOnStart    bool
-	trashScoreSet       string
-	trashImportProfiles bool
-	trashServices       []string
+	trashGuidesPath        string
+	trashGuidesURL         string
+	trashCacheDir          string
+	trashSyncOnStart       bool
+	trashScoreSet          string
+	trashImportProfiles    bool
+	trashServices          []string
+	trashSyncIntervalHours int
+	trashSyncCancel        context.CancelFunc
 }
 
 type Config struct {
@@ -53,13 +55,14 @@ type Config struct {
 	GRPCAddr     string
 	SeedDefaults bool
 
-	TrashGuidesPath     string
-	TrashGuidesURL      string
-	TrashCacheDir       string
-	TrashSyncOnStart    bool
-	TrashScoreSet       string
-	TrashImportProfiles bool
-	TrashServices       []string
+	TrashGuidesPath        string
+	TrashGuidesURL         string
+	TrashCacheDir          string
+	TrashSyncOnStart       bool
+	TrashScoreSet          string
+	TrashImportProfiles    bool
+	TrashServices          []string
+	TrashSyncIntervalHours int
 }
 
 func NewModule(cfg Config) *Module {
@@ -102,6 +105,11 @@ func NewModule(cfg Config) *Module {
 	if v := os.Getenv("FORMATS_TRASH_SERVICES"); v != "" {
 		cfg.TrashServices = splitCSV(v)
 	}
+	if v := os.Getenv("FORMATS_TRASH_INTERVAL"); v != "" {
+		if n, err := strconv.Atoi(strings.TrimSpace(v)); err == nil && n >= 0 {
+			cfg.TrashSyncIntervalHours = n
+		}
+	}
 	if cfg.TrashScoreSet == "" {
 		cfg.TrashScoreSet = "default"
 	}
@@ -109,17 +117,18 @@ func NewModule(cfg Config) *Module {
 		cfg.TrashCacheDir = "/var/lib/media-custom-formats/trash-guides"
 	}
 	return &Module{
-		id:                  cfg.ID,
-		dbPath:              cfg.DBPath,
-		grpcAddr:            cfg.GRPCAddr,
-		seedDefaults:        cfg.SeedDefaults,
-		trashGuidesPath:     cfg.TrashGuidesPath,
-		trashGuidesURL:      cfg.TrashGuidesURL,
-		trashCacheDir:       cfg.TrashCacheDir,
-		trashSyncOnStart:    cfg.TrashSyncOnStart,
-		trashScoreSet:       cfg.TrashScoreSet,
-		trashImportProfiles: cfg.TrashImportProfiles,
-		trashServices:       cfg.TrashServices,
+		id:                     cfg.ID,
+		dbPath:                 cfg.DBPath,
+		grpcAddr:               cfg.GRPCAddr,
+		seedDefaults:           cfg.SeedDefaults,
+		trashGuidesPath:        cfg.TrashGuidesPath,
+		trashGuidesURL:         cfg.TrashGuidesURL,
+		trashCacheDir:          cfg.TrashCacheDir,
+		trashSyncOnStart:       cfg.TrashSyncOnStart,
+		trashScoreSet:          cfg.TrashScoreSet,
+		trashImportProfiles:    cfg.TrashImportProfiles,
+		trashServices:          cfg.TrashServices,
+		trashSyncIntervalHours: cfg.TrashSyncIntervalHours,
 	}
 }
 
@@ -144,8 +153,7 @@ func (m *Module) Info() contracts.ModuleInfo {
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
 		Capabilities:   []string{"media.scoring", "media.formats", "settings"},
-		MinCoreVersion: "0.4.0",
-		HTTPAddr:       m.grpcAddr,
+		MinCoreVersion: "0.5.8",
 	}
 }
 
@@ -206,10 +214,20 @@ func (m *Module) Init(ctx context.Context) error {
 		_ = db.Close()
 		return fmt.Errorf("create release_profile_groups: %w", err)
 	}
+	if err := m.migrateSettingsKV(ctx, db); err != nil {
+		_ = db.Close()
+		return fmt.Errorf("create settings_kv: %w", err)
+	}
+	if err := m.migrateQualityItemsColumn(ctx, db); err != nil {
+		_ = db.Close()
+		return fmt.Errorf("migrate quality_items: %w", err)
+	}
 
 	m.mu.Lock()
 	m.db = db
 	m.mu.Unlock()
+
+	m.loadPersistedSettings(ctx)
 
 	synced := false
 	if m.trashSyncOnStart {
@@ -245,10 +263,12 @@ func (m *Module) Start(ctx context.Context) error {
 			slog.Error("media-custom-formats gRPC error", "error", err)
 		}
 	}()
+	m.startTrashSyncTicker()
 	return nil
 }
 
 func (m *Module) Stop(ctx context.Context) error {
+	m.stopTrashSyncTicker()
 	if m.grpcSrv != nil {
 		m.grpcSrv.GracefulStop()
 	}
@@ -326,8 +346,15 @@ func (m *Module) UpdateFormat(ctx context.Context, req *formatsv1.UpdateFormatRe
 func (m *Module) DeleteFormat(ctx context.Context, req *formatsv1.DeleteFormatRequest) (*formatsv1.DeleteFormatResponse, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	_, err := m.db.Exec(`DELETE FROM custom_formats WHERE id = ?`, req.GetId())
-	return &formatsv1.DeleteFormatResponse{}, err
+	res, err := m.db.Exec(`DELETE FROM custom_formats WHERE id = ?`, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return nil, fmt.Errorf("format not found: %s", req.GetId())
+	}
+	return &formatsv1.DeleteFormatResponse{}, nil
 }
 
 // ── Quality Profile CRUD ───────────────────────────────────────
@@ -384,8 +411,15 @@ func (m *Module) UpdateProfile(ctx context.Context, req *formatsv1.UpdateProfile
 func (m *Module) DeleteProfile(ctx context.Context, req *formatsv1.DeleteProfileRequest) (*formatsv1.DeleteProfileResponse, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	_, err := m.db.Exec(`DELETE FROM quality_profiles WHERE id = ?`, req.GetId())
-	return &formatsv1.DeleteProfileResponse{}, err
+	res, err := m.db.Exec(`DELETE FROM quality_profiles WHERE id = ?`, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return nil, fmt.Errorf("profile not found: %s", req.GetId())
+	}
+	return &formatsv1.DeleteProfileResponse{}, nil
 }
 
 // ── Scoring Engine ─────────────────────────────────────────────
@@ -398,7 +432,8 @@ var (
 	reWebRip     = regexp.MustCompile(`(?i)web[-\s]?rip|webrip`)
 	reWebDL      = regexp.MustCompile(`(?i)web[-\s]?dl|webdl`)
 	reHDTV       = regexp.MustCompile(`(?i)hdtv|hd.?tv`)
-	reCam        = regexp.MustCompile(`(?i)cam|ts|tc|hdts|hd-cam`)
+	reCam        = regexp.MustCompile(`(?i)\b(cam|hdcam|telesync|hdts|tc)\b`)
+	reWordHD     = regexp.MustCompile(`(?i)\bhd\b`)
 	reRawHD      = regexp.MustCompile(`(?i)rawhd|raw.?hd`)
 	reHDR        = regexp.MustCompile(`(?i)hdr\d*|dolby.?vision|dv|hlg|hdr10\+`)
 	reCodecHEVC  = regexp.MustCompile(`(?i)hevc|h[. ]?265|x265`)
@@ -457,28 +492,54 @@ func (m *Module) ScoreRelease(ctx context.Context, req *formatsv1.ScoreReleaseRe
 	}
 
 	totalScore := quality.GetScore() + totalFormatScore
+	resp := &formatsv1.ScoreReleaseResponse{
+		TotalScore:    totalScore,
+		QualityScore:  quality.GetScore(),
+		FormatScore:   totalFormatScore,
+		FormatMatches: formatMatches,
+		Quality:       quality,
+		MeetsMinScore: true,
+		MeetsCutoff:   true,
+	}
+
+	if profile != nil {
+		qName := trashQualityName(quality)
+		if allowed, found := qualityAllowedByProfile(qName, profileQualityItems(profile)); found && !allowed {
+			resp.Rejected = true
+			resp.RejectedReason = "quality not allowed: " + qName
+			resp.TotalScore = 0
+			resp.MeetsMinScore = false
+			resp.MeetsCutoff = false
+			return resp, nil
+		}
+		resp.MeetsMinScore = totalScore >= profile.GetMinScore()
+		resp.MeetsCutoff = totalScore >= profile.GetCutoffScore()
+		if totalScore < profile.GetMinScore() {
+			resp.Rejected = true
+			resp.RejectedReason = fmt.Sprintf("below min score (%d < %d)", totalScore, profile.GetMinScore())
+			return resp, nil
+		}
+	}
 
 	m.mu.RLock()
 	groups := m.loadReleaseGroups()
 	m.mu.RUnlock()
 	scored, ok := applyReleaseGroups(req.GetTitle(), groups, totalScore)
 	if !ok {
-		return &formatsv1.ScoreReleaseResponse{
-			TotalScore:    -100000,
-			QualityScore:  quality.GetScore(),
-			FormatScore:   totalFormatScore,
-			FormatMatches: formatMatches,
-			Quality:       quality,
-		}, nil
+		resp.Rejected = true
+		resp.RejectedReason = "release profile"
+		resp.TotalScore = -100000
+		resp.MeetsMinScore = false
+		resp.MeetsCutoff = false
+		return resp, nil
 	}
 
-	return &formatsv1.ScoreReleaseResponse{
-		TotalScore:    scored,
-		QualityScore:  quality.GetScore(),
-		FormatScore:   totalFormatScore,
-		FormatMatches: formatMatches,
-		Quality:       quality,
-	}, nil
+	resp.TotalScore = scored
+	if profile != nil {
+		resp.MeetsMinScore = scored >= profile.GetMinScore()
+		resp.MeetsCutoff = scored >= profile.GetCutoffScore()
+	}
+	return resp, nil
 }
 
 func parseQualityFromTitle(title string) *formatsv1.QualityInfo {
@@ -516,7 +577,7 @@ func parseQualityFromTitle(title string) *formatsv1.QualityInfo {
 	case reCam.MatchString(title):
 		q.Source = "CAM"
 	default:
-		q.Source = "WEB-DL"
+		q.Source = ""
 	}
 
 	switch {
@@ -548,7 +609,10 @@ func parseResolution(title string) int {
 	if strings.Contains(lower, "4k") || strings.Contains(lower, "uhd") {
 		return 2160
 	}
-	if strings.Contains(lower, "1080") || strings.Contains(lower, "hd") {
+	if strings.Contains(lower, "1080") {
+		return 1080
+	}
+	if reWordHD.MatchString(lower) {
 		return 1080
 	}
 	return 0
@@ -592,10 +656,8 @@ func qualityScore(resolution, source string, hdr bool) int {
 
 func qualityLabel(resolution, source string, hdr bool, codec string) string {
 	parts := []string{resolution}
-	if source != "" && source != "WEB-DL" {
+	if source != "" {
 		parts = append(parts, source)
-	} else {
-		parts = append(parts, "WEB-DL")
 	}
 	if hdr {
 		parts = append(parts, "HDR")
@@ -965,15 +1027,28 @@ func scanFormatRowLegacy(row *sql.Row) *formatsv1.CustomFormat {
 }
 
 func (m *Module) loadProfiles() []*formatsv1.QualityProfile {
-	rows, err := m.db.Query(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at FROM quality_profiles ORDER BY name`)
+	rows, err := m.db.Query(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at, quality_items_json FROM quality_profiles ORDER BY name`)
 	if err != nil {
-		return nil
+		// Older DBs without quality_items_json
+		rows, err = m.db.Query(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at FROM quality_profiles ORDER BY name`)
+		if err != nil {
+			return nil
+		}
+		defer func() { _ = rows.Close() }()
+		var profiles []*formatsv1.QualityProfile
+		for rows.Next() {
+			p := scanProfile(rows)
+			if p != nil {
+				profiles = append(profiles, p)
+			}
+		}
+		return profiles
 	}
 	defer func() { _ = rows.Close() }()
 
 	var profiles []*formatsv1.QualityProfile
 	for rows.Next() {
-		p := scanProfile(rows)
+		p := scanProfileWithItems(rows)
 		if p != nil {
 			profiles = append(profiles, p)
 		}
@@ -982,8 +1057,66 @@ func (m *Module) loadProfiles() []*formatsv1.QualityProfile {
 }
 
 func (m *Module) loadProfile(id string) *formatsv1.QualityProfile {
-	row := m.db.QueryRow(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at FROM quality_profiles WHERE id = ?`, id)
+	row := m.db.QueryRow(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at, quality_items_json FROM quality_profiles WHERE id = ?`, id)
+	if p := scanProfileRowWithItems(row); p != nil {
+		return p
+	}
+	row = m.db.QueryRow(`SELECT id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at FROM quality_profiles WHERE id = ?`, id)
 	return scanProfileRow(row)
+}
+
+func scanProfileWithItems(rows *sql.Rows) *formatsv1.QualityProfile {
+	var id, name, scoresJSON, createdAt, updatedAt, itemsJSON string
+	var minScore, cutoffScore, upgradeDelay int64
+	var upgradeAllowed int
+	if err := rows.Scan(&id, &name, &minScore, &cutoffScore, &upgradeAllowed, &upgradeDelay, &scoresJSON, &createdAt, &updatedAt, &itemsJSON); err != nil {
+		return nil
+	}
+	return buildQualityProfile(id, name, minScore, cutoffScore, upgradeAllowed, upgradeDelay, scoresJSON, createdAt, updatedAt, itemsJSON)
+}
+
+func scanProfileRowWithItems(row *sql.Row) *formatsv1.QualityProfile {
+	var id, name, scoresJSON, createdAt, updatedAt, itemsJSON string
+	var minScore, cutoffScore, upgradeDelay int64
+	var upgradeAllowed int
+	if err := row.Scan(&id, &name, &minScore, &cutoffScore, &upgradeAllowed, &upgradeDelay, &scoresJSON, &createdAt, &updatedAt, &itemsJSON); err != nil {
+		return nil
+	}
+	return buildQualityProfile(id, name, minScore, cutoffScore, upgradeAllowed, upgradeDelay, scoresJSON, createdAt, updatedAt, itemsJSON)
+}
+
+func buildQualityProfile(id, name string, minScore, cutoffScore int64, upgradeAllowed int, upgradeDelay int64, scoresJSON, createdAt, updatedAt, itemsJSON string) *formatsv1.QualityProfile {
+	p := &formatsv1.QualityProfile{
+		Id: id, Name: name,
+		MinScore: int32(minScore), CutoffScore: int32(cutoffScore),
+		UpgradeAllowed: upgradeAllowed != 0, UpgradeDelayMinutes: int32(upgradeDelay),
+		FormatScores: make(map[string]int32),
+		CreatedAt:    createdAt, UpdatedAt: updatedAt,
+	}
+	_ = json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
+	for _, item := range decodeQualityItemsJSON(itemsJSON) {
+		if item == nil {
+			continue
+		}
+		p.QualityItems = append(p.QualityItems, &formatsv1.QualityAllowItem{
+			Name: item.Name, Allowed: item.Allowed,
+		})
+	}
+	return p
+}
+
+func profileQualityItems(p *formatsv1.QualityProfile) []*qualityAllowItem {
+	if p == nil || len(p.GetQualityItems()) == 0 {
+		return nil
+	}
+	out := make([]*qualityAllowItem, 0, len(p.GetQualityItems()))
+	for _, item := range p.GetQualityItems() {
+		if item == nil {
+			continue
+		}
+		out = append(out, &qualityAllowItem{Name: item.GetName(), Allowed: item.GetAllowed()})
+	}
+	return out
 }
 
 func scanProfile(rows *sql.Rows) *formatsv1.QualityProfile {
@@ -1027,6 +1160,65 @@ func boolToInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+func (m *Module) migrateQualityItemsColumn(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `ALTER TABLE quality_profiles ADD COLUMN quality_items_json TEXT NOT NULL DEFAULT '[]'`)
+	if err != nil && !strings.Contains(strings.ToLower(err.Error()), "duplicate column") {
+		return err
+	}
+	return nil
+}
+
+func (m *Module) startTrashSyncTicker() {
+	m.mu.RLock()
+	hours := m.trashSyncIntervalHours
+	path := m.trashGuidesPath
+	scoreSet := m.trashScoreSet
+	importProfiles := m.trashImportProfiles
+	services := append([]string(nil), m.trashServices...)
+	m.mu.RUnlock()
+	if hours <= 0 {
+		return
+	}
+	tickCtx, cancel := context.WithCancel(context.Background())
+	m.mu.Lock()
+	if m.trashSyncCancel != nil {
+		m.trashSyncCancel()
+	}
+	m.trashSyncCancel = cancel
+	m.mu.Unlock()
+
+	go func() {
+		ticker := time.NewTicker(time.Duration(hours) * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-tickCtx.Done():
+				return
+			case <-ticker.C:
+				_, err := m.SyncTrashGuides(context.Background(), &formatsv1.SyncTrashGuidesRequest{
+					Path:           path,
+					ScoreSet:       scoreSet,
+					ImportProfiles: importProfiles,
+					Services:       services,
+				})
+				if err != nil {
+					slog.Warn("scheduled trash sync failed", "error", err)
+				}
+			}
+		}
+	}()
+}
+
+func (m *Module) stopTrashSyncTicker() {
+	m.mu.Lock()
+	cancel := m.trashSyncCancel
+	m.trashSyncCancel = nil
+	m.mu.Unlock()
+	if cancel != nil {
+		cancel()
+	}
 }
 
 var (

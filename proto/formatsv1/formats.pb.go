@@ -573,6 +573,58 @@ func (*DeleteFormatResponse) Descriptor() ([]byte, []int) {
 	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{9}
 }
 
+type QualityAllowItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Allowed       bool                   `protobuf:"varint,2,opt,name=allowed,proto3" json:"allowed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QualityAllowItem) Reset() {
+	*x = QualityAllowItem{}
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QualityAllowItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QualityAllowItem) ProtoMessage() {}
+
+func (x *QualityAllowItem) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QualityAllowItem.ProtoReflect.Descriptor instead.
+func (*QualityAllowItem) Descriptor() ([]byte, []int) {
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *QualityAllowItem) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *QualityAllowItem) GetAllowed() bool {
+	if x != nil {
+		return x.Allowed
+	}
+	return false
+}
+
 type QualityProfile struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	Id                  string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -584,13 +636,14 @@ type QualityProfile struct {
 	FormatScores        map[string]int32       `protobuf:"bytes,7,rep,name=format_scores,json=formatScores,proto3" json:"format_scores,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"` // format_id → score
 	CreatedAt           string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt           string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	QualityItems        []*QualityAllowItem    `protobuf:"bytes,10,rep,name=quality_items,json=qualityItems,proto3" json:"quality_items,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
 
 func (x *QualityProfile) Reset() {
 	*x = QualityProfile{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[10]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -602,7 +655,7 @@ func (x *QualityProfile) String() string {
 func (*QualityProfile) ProtoMessage() {}
 
 func (x *QualityProfile) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[10]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -615,7 +668,7 @@ func (x *QualityProfile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QualityProfile.ProtoReflect.Descriptor instead.
 func (*QualityProfile) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{10}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *QualityProfile) GetId() string {
@@ -681,6 +734,13 @@ func (x *QualityProfile) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *QualityProfile) GetQualityItems() []*QualityAllowItem {
+	if x != nil {
+		return x.QualityItems
+	}
+	return nil
+}
+
 type ListProfilesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -689,7 +749,7 @@ type ListProfilesRequest struct {
 
 func (x *ListProfilesRequest) Reset() {
 	*x = ListProfilesRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[11]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +761,7 @@ func (x *ListProfilesRequest) String() string {
 func (*ListProfilesRequest) ProtoMessage() {}
 
 func (x *ListProfilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[11]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +774,7 @@ func (x *ListProfilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProfilesRequest.ProtoReflect.Descriptor instead.
 func (*ListProfilesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{11}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{12}
 }
 
 type ListProfilesResponse struct {
@@ -726,7 +786,7 @@ type ListProfilesResponse struct {
 
 func (x *ListProfilesResponse) Reset() {
 	*x = ListProfilesResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[12]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -738,7 +798,7 @@ func (x *ListProfilesResponse) String() string {
 func (*ListProfilesResponse) ProtoMessage() {}
 
 func (x *ListProfilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[12]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -751,7 +811,7 @@ func (x *ListProfilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProfilesResponse.ProtoReflect.Descriptor instead.
 func (*ListProfilesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{12}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListProfilesResponse) GetProfiles() []*QualityProfile {
@@ -775,7 +835,7 @@ type CreateProfileRequest struct {
 
 func (x *CreateProfileRequest) Reset() {
 	*x = CreateProfileRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[13]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -787,7 +847,7 @@ func (x *CreateProfileRequest) String() string {
 func (*CreateProfileRequest) ProtoMessage() {}
 
 func (x *CreateProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[13]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -800,7 +860,7 @@ func (x *CreateProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProfileRequest.ProtoReflect.Descriptor instead.
 func (*CreateProfileRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{13}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreateProfileRequest) GetName() string {
@@ -854,7 +914,7 @@ type CreateProfileResponse struct {
 
 func (x *CreateProfileResponse) Reset() {
 	*x = CreateProfileResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[14]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -866,7 +926,7 @@ func (x *CreateProfileResponse) String() string {
 func (*CreateProfileResponse) ProtoMessage() {}
 
 func (x *CreateProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[14]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -879,7 +939,7 @@ func (x *CreateProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateProfileResponse.ProtoReflect.Descriptor instead.
 func (*CreateProfileResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{14}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreateProfileResponse) GetProfile() *QualityProfile {
@@ -904,7 +964,7 @@ type UpdateProfileRequest struct {
 
 func (x *UpdateProfileRequest) Reset() {
 	*x = UpdateProfileRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[15]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -916,7 +976,7 @@ func (x *UpdateProfileRequest) String() string {
 func (*UpdateProfileRequest) ProtoMessage() {}
 
 func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[15]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -929,7 +989,7 @@ func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileRequest.ProtoReflect.Descriptor instead.
 func (*UpdateProfileRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{15}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateProfileRequest) GetId() string {
@@ -990,7 +1050,7 @@ type UpdateProfileResponse struct {
 
 func (x *UpdateProfileResponse) Reset() {
 	*x = UpdateProfileResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[16]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1002,7 +1062,7 @@ func (x *UpdateProfileResponse) String() string {
 func (*UpdateProfileResponse) ProtoMessage() {}
 
 func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[16]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1015,7 +1075,7 @@ func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProfileResponse.ProtoReflect.Descriptor instead.
 func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{16}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *UpdateProfileResponse) GetProfile() *QualityProfile {
@@ -1034,7 +1094,7 @@ type DeleteProfileRequest struct {
 
 func (x *DeleteProfileRequest) Reset() {
 	*x = DeleteProfileRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[17]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1046,7 +1106,7 @@ func (x *DeleteProfileRequest) String() string {
 func (*DeleteProfileRequest) ProtoMessage() {}
 
 func (x *DeleteProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[17]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1059,7 +1119,7 @@ func (x *DeleteProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProfileRequest.ProtoReflect.Descriptor instead.
 func (*DeleteProfileRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{17}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DeleteProfileRequest) GetId() string {
@@ -1077,7 +1137,7 @@ type DeleteProfileResponse struct {
 
 func (x *DeleteProfileResponse) Reset() {
 	*x = DeleteProfileResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[18]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1089,7 +1149,7 @@ func (x *DeleteProfileResponse) String() string {
 func (*DeleteProfileResponse) ProtoMessage() {}
 
 func (x *DeleteProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[18]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1102,7 +1162,7 @@ func (x *DeleteProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteProfileResponse.ProtoReflect.Descriptor instead.
 func (*DeleteProfileResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{18}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{19}
 }
 
 type ScoreReleaseRequest struct {
@@ -1120,7 +1180,7 @@ type ScoreReleaseRequest struct {
 
 func (x *ScoreReleaseRequest) Reset() {
 	*x = ScoreReleaseRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[19]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1132,7 +1192,7 @@ func (x *ScoreReleaseRequest) String() string {
 func (*ScoreReleaseRequest) ProtoMessage() {}
 
 func (x *ScoreReleaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[19]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1145,7 +1205,7 @@ func (x *ScoreReleaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreReleaseRequest.ProtoReflect.Descriptor instead.
 func (*ScoreReleaseRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{19}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ScoreReleaseRequest) GetTitle() string {
@@ -1198,19 +1258,23 @@ func (x *ScoreReleaseRequest) GetProfileId() string {
 }
 
 type ScoreReleaseResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TotalScore    int32                  `protobuf:"varint,1,opt,name=total_score,json=totalScore,proto3" json:"total_score,omitempty"`
-	QualityScore  int32                  `protobuf:"varint,2,opt,name=quality_score,json=qualityScore,proto3" json:"quality_score,omitempty"`
-	FormatScore   int32                  `protobuf:"varint,3,opt,name=format_score,json=formatScore,proto3" json:"format_score,omitempty"`
-	FormatMatches []*FormatMatch         `protobuf:"bytes,4,rep,name=format_matches,json=formatMatches,proto3" json:"format_matches,omitempty"`
-	Quality       *QualityInfo           `protobuf:"bytes,5,opt,name=quality,proto3" json:"quality,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TotalScore     int32                  `protobuf:"varint,1,opt,name=total_score,json=totalScore,proto3" json:"total_score,omitempty"`
+	QualityScore   int32                  `protobuf:"varint,2,opt,name=quality_score,json=qualityScore,proto3" json:"quality_score,omitempty"`
+	FormatScore    int32                  `protobuf:"varint,3,opt,name=format_score,json=formatScore,proto3" json:"format_score,omitempty"`
+	FormatMatches  []*FormatMatch         `protobuf:"bytes,4,rep,name=format_matches,json=formatMatches,proto3" json:"format_matches,omitempty"`
+	Quality        *QualityInfo           `protobuf:"bytes,5,opt,name=quality,proto3" json:"quality,omitempty"`
+	Rejected       bool                   `protobuf:"varint,6,opt,name=rejected,proto3" json:"rejected,omitempty"`
+	RejectedReason string                 `protobuf:"bytes,7,opt,name=rejected_reason,json=rejectedReason,proto3" json:"rejected_reason,omitempty"`
+	MeetsMinScore  bool                   `protobuf:"varint,8,opt,name=meets_min_score,json=meetsMinScore,proto3" json:"meets_min_score,omitempty"`
+	MeetsCutoff    bool                   `protobuf:"varint,9,opt,name=meets_cutoff,json=meetsCutoff,proto3" json:"meets_cutoff,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ScoreReleaseResponse) Reset() {
 	*x = ScoreReleaseResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[20]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1222,7 +1286,7 @@ func (x *ScoreReleaseResponse) String() string {
 func (*ScoreReleaseResponse) ProtoMessage() {}
 
 func (x *ScoreReleaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[20]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1235,7 +1299,7 @@ func (x *ScoreReleaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScoreReleaseResponse.ProtoReflect.Descriptor instead.
 func (*ScoreReleaseResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{20}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ScoreReleaseResponse) GetTotalScore() int32 {
@@ -1273,6 +1337,34 @@ func (x *ScoreReleaseResponse) GetQuality() *QualityInfo {
 	return nil
 }
 
+func (x *ScoreReleaseResponse) GetRejected() bool {
+	if x != nil {
+		return x.Rejected
+	}
+	return false
+}
+
+func (x *ScoreReleaseResponse) GetRejectedReason() string {
+	if x != nil {
+		return x.RejectedReason
+	}
+	return ""
+}
+
+func (x *ScoreReleaseResponse) GetMeetsMinScore() bool {
+	if x != nil {
+		return x.MeetsMinScore
+	}
+	return false
+}
+
+func (x *ScoreReleaseResponse) GetMeetsCutoff() bool {
+	if x != nil {
+		return x.MeetsCutoff
+	}
+	return false
+}
+
 type FormatMatch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FormatId      string                 `protobuf:"bytes,1,opt,name=format_id,json=formatId,proto3" json:"format_id,omitempty"`
@@ -1285,7 +1377,7 @@ type FormatMatch struct {
 
 func (x *FormatMatch) Reset() {
 	*x = FormatMatch{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[21]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1297,7 +1389,7 @@ func (x *FormatMatch) String() string {
 func (*FormatMatch) ProtoMessage() {}
 
 func (x *FormatMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[21]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1310,7 +1402,7 @@ func (x *FormatMatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormatMatch.ProtoReflect.Descriptor instead.
 func (*FormatMatch) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{21}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FormatMatch) GetFormatId() string {
@@ -1355,7 +1447,7 @@ type QualityInfo struct {
 
 func (x *QualityInfo) Reset() {
 	*x = QualityInfo{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[22]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1367,7 +1459,7 @@ func (x *QualityInfo) String() string {
 func (*QualityInfo) ProtoMessage() {}
 
 func (x *QualityInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[22]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1380,7 +1472,7 @@ func (x *QualityInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QualityInfo.ProtoReflect.Descriptor instead.
 func (*QualityInfo) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{22}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *QualityInfo) GetResolution() string {
@@ -1434,7 +1526,7 @@ type ParseQualityRequest struct {
 
 func (x *ParseQualityRequest) Reset() {
 	*x = ParseQualityRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[23]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1446,7 +1538,7 @@ func (x *ParseQualityRequest) String() string {
 func (*ParseQualityRequest) ProtoMessage() {}
 
 func (x *ParseQualityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[23]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1459,7 +1551,7 @@ func (x *ParseQualityRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseQualityRequest.ProtoReflect.Descriptor instead.
 func (*ParseQualityRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{23}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ParseQualityRequest) GetTitle() string {
@@ -1478,7 +1570,7 @@ type ParseQualityResponse struct {
 
 func (x *ParseQualityResponse) Reset() {
 	*x = ParseQualityResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[24]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1490,7 +1582,7 @@ func (x *ParseQualityResponse) String() string {
 func (*ParseQualityResponse) ProtoMessage() {}
 
 func (x *ParseQualityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[24]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1503,7 +1595,7 @@ func (x *ParseQualityResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParseQualityResponse.ProtoReflect.Descriptor instead.
 func (*ParseQualityResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{24}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ParseQualityResponse) GetQuality() *QualityInfo {
@@ -1528,7 +1620,7 @@ type ReleaseProfile struct {
 
 func (x *ReleaseProfile) Reset() {
 	*x = ReleaseProfile{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[25]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1540,7 +1632,7 @@ func (x *ReleaseProfile) String() string {
 func (*ReleaseProfile) ProtoMessage() {}
 
 func (x *ReleaseProfile) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[25]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1553,7 +1645,7 @@ func (x *ReleaseProfile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseProfile.ProtoReflect.Descriptor instead.
 func (*ReleaseProfile) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{25}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ReleaseProfile) GetId() string {
@@ -1613,7 +1705,7 @@ type ListReleaseProfilesRequest struct {
 
 func (x *ListReleaseProfilesRequest) Reset() {
 	*x = ListReleaseProfilesRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[26]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1625,7 +1717,7 @@ func (x *ListReleaseProfilesRequest) String() string {
 func (*ListReleaseProfilesRequest) ProtoMessage() {}
 
 func (x *ListReleaseProfilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[26]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1638,7 +1730,7 @@ func (x *ListReleaseProfilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleaseProfilesRequest.ProtoReflect.Descriptor instead.
 func (*ListReleaseProfilesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{26}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{27}
 }
 
 type ListReleaseProfilesResponse struct {
@@ -1650,7 +1742,7 @@ type ListReleaseProfilesResponse struct {
 
 func (x *ListReleaseProfilesResponse) Reset() {
 	*x = ListReleaseProfilesResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[27]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1662,7 +1754,7 @@ func (x *ListReleaseProfilesResponse) String() string {
 func (*ListReleaseProfilesResponse) ProtoMessage() {}
 
 func (x *ListReleaseProfilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[27]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1675,7 +1767,7 @@ func (x *ListReleaseProfilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleaseProfilesResponse.ProtoReflect.Descriptor instead.
 func (*ListReleaseProfilesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{27}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *ListReleaseProfilesResponse) GetProfiles() []*ReleaseProfile {
@@ -1693,14 +1785,14 @@ type UpsertReleaseProfileRequest struct {
 	MustContain    []string               `protobuf:"bytes,4,rep,name=must_contain,json=mustContain,proto3" json:"must_contain,omitempty"`
 	MustNotContain []string               `protobuf:"bytes,5,rep,name=must_not_contain,json=mustNotContain,proto3" json:"must_not_contain,omitempty"`
 	PreferredScore int32                  `protobuf:"varint,6,opt,name=preferred_score,json=preferredScore,proto3" json:"preferred_score,omitempty"`
-	Enabled        bool                   `protobuf:"varint,7,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Enabled        *bool                  `protobuf:"varint,7,opt,name=enabled,proto3,oneof" json:"enabled,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
 func (x *UpsertReleaseProfileRequest) Reset() {
 	*x = UpsertReleaseProfileRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[28]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1712,7 +1804,7 @@ func (x *UpsertReleaseProfileRequest) String() string {
 func (*UpsertReleaseProfileRequest) ProtoMessage() {}
 
 func (x *UpsertReleaseProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[28]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1725,7 +1817,7 @@ func (x *UpsertReleaseProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertReleaseProfileRequest.ProtoReflect.Descriptor instead.
 func (*UpsertReleaseProfileRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{28}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *UpsertReleaseProfileRequest) GetId() string {
@@ -1771,8 +1863,8 @@ func (x *UpsertReleaseProfileRequest) GetPreferredScore() int32 {
 }
 
 func (x *UpsertReleaseProfileRequest) GetEnabled() bool {
-	if x != nil {
-		return x.Enabled
+	if x != nil && x.Enabled != nil {
+		return *x.Enabled
 	}
 	return false
 }
@@ -1786,7 +1878,7 @@ type UpsertReleaseProfileResponse struct {
 
 func (x *UpsertReleaseProfileResponse) Reset() {
 	*x = UpsertReleaseProfileResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[29]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1798,7 +1890,7 @@ func (x *UpsertReleaseProfileResponse) String() string {
 func (*UpsertReleaseProfileResponse) ProtoMessage() {}
 
 func (x *UpsertReleaseProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[29]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1811,7 +1903,7 @@ func (x *UpsertReleaseProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertReleaseProfileResponse.ProtoReflect.Descriptor instead.
 func (*UpsertReleaseProfileResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{29}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *UpsertReleaseProfileResponse) GetProfile() *ReleaseProfile {
@@ -1830,7 +1922,7 @@ type DeleteReleaseProfileRequest struct {
 
 func (x *DeleteReleaseProfileRequest) Reset() {
 	*x = DeleteReleaseProfileRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[30]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1842,7 +1934,7 @@ func (x *DeleteReleaseProfileRequest) String() string {
 func (*DeleteReleaseProfileRequest) ProtoMessage() {}
 
 func (x *DeleteReleaseProfileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[30]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1855,7 +1947,7 @@ func (x *DeleteReleaseProfileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteReleaseProfileRequest.ProtoReflect.Descriptor instead.
 func (*DeleteReleaseProfileRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{30}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *DeleteReleaseProfileRequest) GetId() string {
@@ -1873,7 +1965,7 @@ type DeleteReleaseProfileResponse struct {
 
 func (x *DeleteReleaseProfileResponse) Reset() {
 	*x = DeleteReleaseProfileResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[31]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1885,7 +1977,7 @@ func (x *DeleteReleaseProfileResponse) String() string {
 func (*DeleteReleaseProfileResponse) ProtoMessage() {}
 
 func (x *DeleteReleaseProfileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[31]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1898,7 +1990,7 @@ func (x *DeleteReleaseProfileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteReleaseProfileResponse.ProtoReflect.Descriptor instead.
 func (*DeleteReleaseProfileResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{31}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{32}
 }
 
 type SyncTrashGuidesRequest struct {
@@ -1911,14 +2003,16 @@ type SyncTrashGuidesRequest struct {
 	// When true, also upsert quality profiles from the guides tree.
 	ImportProfiles bool `protobuf:"varint,3,opt,name=import_profiles,json=importProfiles,proto3" json:"import_profiles,omitempty"`
 	// Services to import: "radarr", "sonarr". Empty → both.
-	Services      []string `protobuf:"bytes,4,rep,name=services,proto3" json:"services,omitempty"`
+	Services []string `protobuf:"bytes,4,rep,name=services,proto3" json:"services,omitempty"`
+	// When true, re-download the guides archive even if a cache exists.
+	Force         bool `protobuf:"varint,5,opt,name=force,proto3" json:"force,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SyncTrashGuidesRequest) Reset() {
 	*x = SyncTrashGuidesRequest{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[32]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1930,7 +2024,7 @@ func (x *SyncTrashGuidesRequest) String() string {
 func (*SyncTrashGuidesRequest) ProtoMessage() {}
 
 func (x *SyncTrashGuidesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[32]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1943,7 +2037,7 @@ func (x *SyncTrashGuidesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncTrashGuidesRequest.ProtoReflect.Descriptor instead.
 func (*SyncTrashGuidesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{32}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SyncTrashGuidesRequest) GetPath() string {
@@ -1974,6 +2068,13 @@ func (x *SyncTrashGuidesRequest) GetServices() []string {
 	return nil
 }
 
+func (x *SyncTrashGuidesRequest) GetForce() bool {
+	if x != nil {
+		return x.Force
+	}
+	return false
+}
+
 type SyncTrashGuidesResponse struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	FormatsUpserted  int32                  `protobuf:"varint,1,opt,name=formats_upserted,json=formatsUpserted,proto3" json:"formats_upserted,omitempty"`
@@ -1987,7 +2088,7 @@ type SyncTrashGuidesResponse struct {
 
 func (x *SyncTrashGuidesResponse) Reset() {
 	*x = SyncTrashGuidesResponse{}
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[33]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1999,7 +2100,7 @@ func (x *SyncTrashGuidesResponse) String() string {
 func (*SyncTrashGuidesResponse) ProtoMessage() {}
 
 func (x *SyncTrashGuidesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_formatsv1_formats_proto_msgTypes[33]
+	mi := &file_proto_formatsv1_formats_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2012,7 +2113,7 @@ func (x *SyncTrashGuidesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncTrashGuidesResponse.ProtoReflect.Descriptor instead.
 func (*SyncTrashGuidesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{33}
+	return file_proto_formatsv1_formats_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *SyncTrashGuidesResponse) GetFormatsUpserted() int32 {
@@ -2091,7 +2192,10 @@ const file_proto_formatsv1_formats_proto_rawDesc = "" +
 	"\x06format\x18\x01 \x01(\v2 .muxcore.formats.v1.CustomFormatR\x06format\"%\n" +
 	"\x13DeleteFormatRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x16\n" +
-	"\x14DeleteFormatResponse\"\xab\x03\n" +
+	"\x14DeleteFormatResponse\"@\n" +
+	"\x10QualityAllowItem\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\aallowed\x18\x02 \x01(\bR\aallowed\"\xf6\x03\n" +
 	"\x0eQualityProfile\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
@@ -2103,7 +2207,9 @@ const file_proto_formatsv1_formats_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\tR\tupdatedAt\x1a?\n" +
+	"updated_at\x18\t \x01(\tR\tupdatedAt\x12I\n" +
+	"\rquality_items\x18\n" +
+	" \x03(\v2$.muxcore.formats.v1.QualityAllowItemR\fqualityItems\x1a?\n" +
 	"\x11FormatScoresEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\x15\n" +
@@ -2146,14 +2252,18 @@ const file_proto_formatsv1_formats_proto_rawDesc = "" +
 	"\fsub_category\x18\x05 \x01(\tR\vsubCategory\x12+\n" +
 	"\x11download_protocol\x18\x06 \x01(\tR\x10downloadProtocol\x12\x1d\n" +
 	"\n" +
-	"profile_id\x18\a \x01(\tR\tprofileId\"\x82\x02\n" +
+	"profile_id\x18\a \x01(\tR\tprofileId\"\x92\x03\n" +
 	"\x14ScoreReleaseResponse\x12\x1f\n" +
 	"\vtotal_score\x18\x01 \x01(\x05R\n" +
 	"totalScore\x12#\n" +
 	"\rquality_score\x18\x02 \x01(\x05R\fqualityScore\x12!\n" +
 	"\fformat_score\x18\x03 \x01(\x05R\vformatScore\x12F\n" +
 	"\x0eformat_matches\x18\x04 \x03(\v2\x1f.muxcore.formats.v1.FormatMatchR\rformatMatches\x129\n" +
-	"\aquality\x18\x05 \x01(\v2\x1f.muxcore.formats.v1.QualityInfoR\aquality\"\x84\x01\n" +
+	"\aquality\x18\x05 \x01(\v2\x1f.muxcore.formats.v1.QualityInfoR\aquality\x12\x1a\n" +
+	"\brejected\x18\x06 \x01(\bR\brejected\x12'\n" +
+	"\x0frejected_reason\x18\a \x01(\tR\x0erejectedReason\x12&\n" +
+	"\x0fmeets_min_score\x18\b \x01(\bR\rmeetsMinScore\x12!\n" +
+	"\fmeets_cutoff\x18\t \x01(\bR\vmeetsCutoff\"\x84\x01\n" +
 	"\vFormatMatch\x12\x1b\n" +
 	"\tformat_id\x18\x01 \x01(\tR\bformatId\x12\x1f\n" +
 	"\vformat_name\x18\x02 \x01(\tR\n" +
@@ -2183,25 +2293,28 @@ const file_proto_formatsv1_formats_proto_rawDesc = "" +
 	"\aenabled\x18\a \x01(\bR\aenabled\"\x1c\n" +
 	"\x1aListReleaseProfilesRequest\"]\n" +
 	"\x1bListReleaseProfilesResponse\x12>\n" +
-	"\bprofiles\x18\x01 \x03(\v2\".muxcore.formats.v1.ReleaseProfileR\bprofiles\"\xef\x01\n" +
+	"\bprofiles\x18\x01 \x03(\v2\".muxcore.formats.v1.ReleaseProfileR\bprofiles\"\x80\x02\n" +
 	"\x1bUpsertReleaseProfileRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1c\n" +
 	"\tpreferred\x18\x03 \x03(\tR\tpreferred\x12!\n" +
 	"\fmust_contain\x18\x04 \x03(\tR\vmustContain\x12(\n" +
 	"\x10must_not_contain\x18\x05 \x03(\tR\x0emustNotContain\x12'\n" +
-	"\x0fpreferred_score\x18\x06 \x01(\x05R\x0epreferredScore\x12\x18\n" +
-	"\aenabled\x18\a \x01(\bR\aenabled\"\\\n" +
+	"\x0fpreferred_score\x18\x06 \x01(\x05R\x0epreferredScore\x12\x1d\n" +
+	"\aenabled\x18\a \x01(\bH\x00R\aenabled\x88\x01\x01B\n" +
+	"\n" +
+	"\b_enabled\"\\\n" +
 	"\x1cUpsertReleaseProfileResponse\x12<\n" +
 	"\aprofile\x18\x01 \x01(\v2\".muxcore.formats.v1.ReleaseProfileR\aprofile\"-\n" +
 	"\x1bDeleteReleaseProfileRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1e\n" +
-	"\x1cDeleteReleaseProfileResponse\"\x8e\x01\n" +
+	"\x1cDeleteReleaseProfileResponse\"\xa4\x01\n" +
 	"\x16SyncTrashGuidesRequest\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1b\n" +
 	"\tscore_set\x18\x02 \x01(\tR\bscoreSet\x12'\n" +
 	"\x0fimport_profiles\x18\x03 \x01(\bR\x0eimportProfiles\x12\x1a\n" +
-	"\bservices\x18\x04 \x03(\tR\bservices\"\xd7\x01\n" +
+	"\bservices\x18\x04 \x03(\tR\bservices\x12\x14\n" +
+	"\x05force\x18\x05 \x01(\bR\x05force\"\xd7\x01\n" +
 	"\x17SyncTrashGuidesResponse\x12)\n" +
 	"\x10formats_upserted\x18\x01 \x01(\x05R\x0fformatsUpserted\x12'\n" +
 	"\x0fformats_skipped\x18\x02 \x01(\x05R\x0eformatsSkipped\x12+\n" +
@@ -2237,7 +2350,7 @@ func file_proto_formatsv1_formats_proto_rawDescGZIP() []byte {
 	return file_proto_formatsv1_formats_proto_rawDescData
 }
 
-var file_proto_formatsv1_formats_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
+var file_proto_formatsv1_formats_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_proto_formatsv1_formats_proto_goTypes = []any{
 	(*CustomFormat)(nil),                 // 0: muxcore.formats.v1.CustomFormat
 	(*FormatRule)(nil),                   // 1: muxcore.formats.v1.FormatRule
@@ -2249,33 +2362,34 @@ var file_proto_formatsv1_formats_proto_goTypes = []any{
 	(*UpdateFormatResponse)(nil),         // 7: muxcore.formats.v1.UpdateFormatResponse
 	(*DeleteFormatRequest)(nil),          // 8: muxcore.formats.v1.DeleteFormatRequest
 	(*DeleteFormatResponse)(nil),         // 9: muxcore.formats.v1.DeleteFormatResponse
-	(*QualityProfile)(nil),               // 10: muxcore.formats.v1.QualityProfile
-	(*ListProfilesRequest)(nil),          // 11: muxcore.formats.v1.ListProfilesRequest
-	(*ListProfilesResponse)(nil),         // 12: muxcore.formats.v1.ListProfilesResponse
-	(*CreateProfileRequest)(nil),         // 13: muxcore.formats.v1.CreateProfileRequest
-	(*CreateProfileResponse)(nil),        // 14: muxcore.formats.v1.CreateProfileResponse
-	(*UpdateProfileRequest)(nil),         // 15: muxcore.formats.v1.UpdateProfileRequest
-	(*UpdateProfileResponse)(nil),        // 16: muxcore.formats.v1.UpdateProfileResponse
-	(*DeleteProfileRequest)(nil),         // 17: muxcore.formats.v1.DeleteProfileRequest
-	(*DeleteProfileResponse)(nil),        // 18: muxcore.formats.v1.DeleteProfileResponse
-	(*ScoreReleaseRequest)(nil),          // 19: muxcore.formats.v1.ScoreReleaseRequest
-	(*ScoreReleaseResponse)(nil),         // 20: muxcore.formats.v1.ScoreReleaseResponse
-	(*FormatMatch)(nil),                  // 21: muxcore.formats.v1.FormatMatch
-	(*QualityInfo)(nil),                  // 22: muxcore.formats.v1.QualityInfo
-	(*ParseQualityRequest)(nil),          // 23: muxcore.formats.v1.ParseQualityRequest
-	(*ParseQualityResponse)(nil),         // 24: muxcore.formats.v1.ParseQualityResponse
-	(*ReleaseProfile)(nil),               // 25: muxcore.formats.v1.ReleaseProfile
-	(*ListReleaseProfilesRequest)(nil),   // 26: muxcore.formats.v1.ListReleaseProfilesRequest
-	(*ListReleaseProfilesResponse)(nil),  // 27: muxcore.formats.v1.ListReleaseProfilesResponse
-	(*UpsertReleaseProfileRequest)(nil),  // 28: muxcore.formats.v1.UpsertReleaseProfileRequest
-	(*UpsertReleaseProfileResponse)(nil), // 29: muxcore.formats.v1.UpsertReleaseProfileResponse
-	(*DeleteReleaseProfileRequest)(nil),  // 30: muxcore.formats.v1.DeleteReleaseProfileRequest
-	(*DeleteReleaseProfileResponse)(nil), // 31: muxcore.formats.v1.DeleteReleaseProfileResponse
-	(*SyncTrashGuidesRequest)(nil),       // 32: muxcore.formats.v1.SyncTrashGuidesRequest
-	(*SyncTrashGuidesResponse)(nil),      // 33: muxcore.formats.v1.SyncTrashGuidesResponse
-	nil,                                  // 34: muxcore.formats.v1.QualityProfile.FormatScoresEntry
-	nil,                                  // 35: muxcore.formats.v1.CreateProfileRequest.FormatScoresEntry
-	nil,                                  // 36: muxcore.formats.v1.UpdateProfileRequest.FormatScoresEntry
+	(*QualityAllowItem)(nil),             // 10: muxcore.formats.v1.QualityAllowItem
+	(*QualityProfile)(nil),               // 11: muxcore.formats.v1.QualityProfile
+	(*ListProfilesRequest)(nil),          // 12: muxcore.formats.v1.ListProfilesRequest
+	(*ListProfilesResponse)(nil),         // 13: muxcore.formats.v1.ListProfilesResponse
+	(*CreateProfileRequest)(nil),         // 14: muxcore.formats.v1.CreateProfileRequest
+	(*CreateProfileResponse)(nil),        // 15: muxcore.formats.v1.CreateProfileResponse
+	(*UpdateProfileRequest)(nil),         // 16: muxcore.formats.v1.UpdateProfileRequest
+	(*UpdateProfileResponse)(nil),        // 17: muxcore.formats.v1.UpdateProfileResponse
+	(*DeleteProfileRequest)(nil),         // 18: muxcore.formats.v1.DeleteProfileRequest
+	(*DeleteProfileResponse)(nil),        // 19: muxcore.formats.v1.DeleteProfileResponse
+	(*ScoreReleaseRequest)(nil),          // 20: muxcore.formats.v1.ScoreReleaseRequest
+	(*ScoreReleaseResponse)(nil),         // 21: muxcore.formats.v1.ScoreReleaseResponse
+	(*FormatMatch)(nil),                  // 22: muxcore.formats.v1.FormatMatch
+	(*QualityInfo)(nil),                  // 23: muxcore.formats.v1.QualityInfo
+	(*ParseQualityRequest)(nil),          // 24: muxcore.formats.v1.ParseQualityRequest
+	(*ParseQualityResponse)(nil),         // 25: muxcore.formats.v1.ParseQualityResponse
+	(*ReleaseProfile)(nil),               // 26: muxcore.formats.v1.ReleaseProfile
+	(*ListReleaseProfilesRequest)(nil),   // 27: muxcore.formats.v1.ListReleaseProfilesRequest
+	(*ListReleaseProfilesResponse)(nil),  // 28: muxcore.formats.v1.ListReleaseProfilesResponse
+	(*UpsertReleaseProfileRequest)(nil),  // 29: muxcore.formats.v1.UpsertReleaseProfileRequest
+	(*UpsertReleaseProfileResponse)(nil), // 30: muxcore.formats.v1.UpsertReleaseProfileResponse
+	(*DeleteReleaseProfileRequest)(nil),  // 31: muxcore.formats.v1.DeleteReleaseProfileRequest
+	(*DeleteReleaseProfileResponse)(nil), // 32: muxcore.formats.v1.DeleteReleaseProfileResponse
+	(*SyncTrashGuidesRequest)(nil),       // 33: muxcore.formats.v1.SyncTrashGuidesRequest
+	(*SyncTrashGuidesResponse)(nil),      // 34: muxcore.formats.v1.SyncTrashGuidesResponse
+	nil,                                  // 35: muxcore.formats.v1.QualityProfile.FormatScoresEntry
+	nil,                                  // 36: muxcore.formats.v1.CreateProfileRequest.FormatScoresEntry
+	nil,                                  // 37: muxcore.formats.v1.UpdateProfileRequest.FormatScoresEntry
 }
 var file_proto_formatsv1_formats_proto_depIdxs = []int32{
 	1,  // 0: muxcore.formats.v1.CustomFormat.rules:type_name -> muxcore.formats.v1.FormatRule
@@ -2284,50 +2398,51 @@ var file_proto_formatsv1_formats_proto_depIdxs = []int32{
 	0,  // 3: muxcore.formats.v1.CreateFormatResponse.format:type_name -> muxcore.formats.v1.CustomFormat
 	1,  // 4: muxcore.formats.v1.UpdateFormatRequest.rules:type_name -> muxcore.formats.v1.FormatRule
 	0,  // 5: muxcore.formats.v1.UpdateFormatResponse.format:type_name -> muxcore.formats.v1.CustomFormat
-	34, // 6: muxcore.formats.v1.QualityProfile.format_scores:type_name -> muxcore.formats.v1.QualityProfile.FormatScoresEntry
-	10, // 7: muxcore.formats.v1.ListProfilesResponse.profiles:type_name -> muxcore.formats.v1.QualityProfile
-	35, // 8: muxcore.formats.v1.CreateProfileRequest.format_scores:type_name -> muxcore.formats.v1.CreateProfileRequest.FormatScoresEntry
-	10, // 9: muxcore.formats.v1.CreateProfileResponse.profile:type_name -> muxcore.formats.v1.QualityProfile
-	36, // 10: muxcore.formats.v1.UpdateProfileRequest.format_scores:type_name -> muxcore.formats.v1.UpdateProfileRequest.FormatScoresEntry
-	10, // 11: muxcore.formats.v1.UpdateProfileResponse.profile:type_name -> muxcore.formats.v1.QualityProfile
-	21, // 12: muxcore.formats.v1.ScoreReleaseResponse.format_matches:type_name -> muxcore.formats.v1.FormatMatch
-	22, // 13: muxcore.formats.v1.ScoreReleaseResponse.quality:type_name -> muxcore.formats.v1.QualityInfo
-	22, // 14: muxcore.formats.v1.ParseQualityResponse.quality:type_name -> muxcore.formats.v1.QualityInfo
-	25, // 15: muxcore.formats.v1.ListReleaseProfilesResponse.profiles:type_name -> muxcore.formats.v1.ReleaseProfile
-	25, // 16: muxcore.formats.v1.UpsertReleaseProfileResponse.profile:type_name -> muxcore.formats.v1.ReleaseProfile
-	2,  // 17: muxcore.formats.v1.FormatService.ListFormats:input_type -> muxcore.formats.v1.ListFormatsRequest
-	4,  // 18: muxcore.formats.v1.FormatService.CreateFormat:input_type -> muxcore.formats.v1.CreateFormatRequest
-	6,  // 19: muxcore.formats.v1.FormatService.UpdateFormat:input_type -> muxcore.formats.v1.UpdateFormatRequest
-	8,  // 20: muxcore.formats.v1.FormatService.DeleteFormat:input_type -> muxcore.formats.v1.DeleteFormatRequest
-	11, // 21: muxcore.formats.v1.FormatService.ListProfiles:input_type -> muxcore.formats.v1.ListProfilesRequest
-	13, // 22: muxcore.formats.v1.FormatService.CreateProfile:input_type -> muxcore.formats.v1.CreateProfileRequest
-	15, // 23: muxcore.formats.v1.FormatService.UpdateProfile:input_type -> muxcore.formats.v1.UpdateProfileRequest
-	17, // 24: muxcore.formats.v1.FormatService.DeleteProfile:input_type -> muxcore.formats.v1.DeleteProfileRequest
-	19, // 25: muxcore.formats.v1.FormatService.ScoreRelease:input_type -> muxcore.formats.v1.ScoreReleaseRequest
-	23, // 26: muxcore.formats.v1.FormatService.ParseQuality:input_type -> muxcore.formats.v1.ParseQualityRequest
-	26, // 27: muxcore.formats.v1.FormatService.ListReleaseProfiles:input_type -> muxcore.formats.v1.ListReleaseProfilesRequest
-	28, // 28: muxcore.formats.v1.FormatService.UpsertReleaseProfile:input_type -> muxcore.formats.v1.UpsertReleaseProfileRequest
-	30, // 29: muxcore.formats.v1.FormatService.DeleteReleaseProfile:input_type -> muxcore.formats.v1.DeleteReleaseProfileRequest
-	32, // 30: muxcore.formats.v1.FormatService.SyncTrashGuides:input_type -> muxcore.formats.v1.SyncTrashGuidesRequest
-	3,  // 31: muxcore.formats.v1.FormatService.ListFormats:output_type -> muxcore.formats.v1.ListFormatsResponse
-	5,  // 32: muxcore.formats.v1.FormatService.CreateFormat:output_type -> muxcore.formats.v1.CreateFormatResponse
-	7,  // 33: muxcore.formats.v1.FormatService.UpdateFormat:output_type -> muxcore.formats.v1.UpdateFormatResponse
-	9,  // 34: muxcore.formats.v1.FormatService.DeleteFormat:output_type -> muxcore.formats.v1.DeleteFormatResponse
-	12, // 35: muxcore.formats.v1.FormatService.ListProfiles:output_type -> muxcore.formats.v1.ListProfilesResponse
-	14, // 36: muxcore.formats.v1.FormatService.CreateProfile:output_type -> muxcore.formats.v1.CreateProfileResponse
-	16, // 37: muxcore.formats.v1.FormatService.UpdateProfile:output_type -> muxcore.formats.v1.UpdateProfileResponse
-	18, // 38: muxcore.formats.v1.FormatService.DeleteProfile:output_type -> muxcore.formats.v1.DeleteProfileResponse
-	20, // 39: muxcore.formats.v1.FormatService.ScoreRelease:output_type -> muxcore.formats.v1.ScoreReleaseResponse
-	24, // 40: muxcore.formats.v1.FormatService.ParseQuality:output_type -> muxcore.formats.v1.ParseQualityResponse
-	27, // 41: muxcore.formats.v1.FormatService.ListReleaseProfiles:output_type -> muxcore.formats.v1.ListReleaseProfilesResponse
-	29, // 42: muxcore.formats.v1.FormatService.UpsertReleaseProfile:output_type -> muxcore.formats.v1.UpsertReleaseProfileResponse
-	31, // 43: muxcore.formats.v1.FormatService.DeleteReleaseProfile:output_type -> muxcore.formats.v1.DeleteReleaseProfileResponse
-	33, // 44: muxcore.formats.v1.FormatService.SyncTrashGuides:output_type -> muxcore.formats.v1.SyncTrashGuidesResponse
-	31, // [31:45] is the sub-list for method output_type
-	17, // [17:31] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	35, // 6: muxcore.formats.v1.QualityProfile.format_scores:type_name -> muxcore.formats.v1.QualityProfile.FormatScoresEntry
+	10, // 7: muxcore.formats.v1.QualityProfile.quality_items:type_name -> muxcore.formats.v1.QualityAllowItem
+	11, // 8: muxcore.formats.v1.ListProfilesResponse.profiles:type_name -> muxcore.formats.v1.QualityProfile
+	36, // 9: muxcore.formats.v1.CreateProfileRequest.format_scores:type_name -> muxcore.formats.v1.CreateProfileRequest.FormatScoresEntry
+	11, // 10: muxcore.formats.v1.CreateProfileResponse.profile:type_name -> muxcore.formats.v1.QualityProfile
+	37, // 11: muxcore.formats.v1.UpdateProfileRequest.format_scores:type_name -> muxcore.formats.v1.UpdateProfileRequest.FormatScoresEntry
+	11, // 12: muxcore.formats.v1.UpdateProfileResponse.profile:type_name -> muxcore.formats.v1.QualityProfile
+	22, // 13: muxcore.formats.v1.ScoreReleaseResponse.format_matches:type_name -> muxcore.formats.v1.FormatMatch
+	23, // 14: muxcore.formats.v1.ScoreReleaseResponse.quality:type_name -> muxcore.formats.v1.QualityInfo
+	23, // 15: muxcore.formats.v1.ParseQualityResponse.quality:type_name -> muxcore.formats.v1.QualityInfo
+	26, // 16: muxcore.formats.v1.ListReleaseProfilesResponse.profiles:type_name -> muxcore.formats.v1.ReleaseProfile
+	26, // 17: muxcore.formats.v1.UpsertReleaseProfileResponse.profile:type_name -> muxcore.formats.v1.ReleaseProfile
+	2,  // 18: muxcore.formats.v1.FormatService.ListFormats:input_type -> muxcore.formats.v1.ListFormatsRequest
+	4,  // 19: muxcore.formats.v1.FormatService.CreateFormat:input_type -> muxcore.formats.v1.CreateFormatRequest
+	6,  // 20: muxcore.formats.v1.FormatService.UpdateFormat:input_type -> muxcore.formats.v1.UpdateFormatRequest
+	8,  // 21: muxcore.formats.v1.FormatService.DeleteFormat:input_type -> muxcore.formats.v1.DeleteFormatRequest
+	12, // 22: muxcore.formats.v1.FormatService.ListProfiles:input_type -> muxcore.formats.v1.ListProfilesRequest
+	14, // 23: muxcore.formats.v1.FormatService.CreateProfile:input_type -> muxcore.formats.v1.CreateProfileRequest
+	16, // 24: muxcore.formats.v1.FormatService.UpdateProfile:input_type -> muxcore.formats.v1.UpdateProfileRequest
+	18, // 25: muxcore.formats.v1.FormatService.DeleteProfile:input_type -> muxcore.formats.v1.DeleteProfileRequest
+	20, // 26: muxcore.formats.v1.FormatService.ScoreRelease:input_type -> muxcore.formats.v1.ScoreReleaseRequest
+	24, // 27: muxcore.formats.v1.FormatService.ParseQuality:input_type -> muxcore.formats.v1.ParseQualityRequest
+	27, // 28: muxcore.formats.v1.FormatService.ListReleaseProfiles:input_type -> muxcore.formats.v1.ListReleaseProfilesRequest
+	29, // 29: muxcore.formats.v1.FormatService.UpsertReleaseProfile:input_type -> muxcore.formats.v1.UpsertReleaseProfileRequest
+	31, // 30: muxcore.formats.v1.FormatService.DeleteReleaseProfile:input_type -> muxcore.formats.v1.DeleteReleaseProfileRequest
+	33, // 31: muxcore.formats.v1.FormatService.SyncTrashGuides:input_type -> muxcore.formats.v1.SyncTrashGuidesRequest
+	3,  // 32: muxcore.formats.v1.FormatService.ListFormats:output_type -> muxcore.formats.v1.ListFormatsResponse
+	5,  // 33: muxcore.formats.v1.FormatService.CreateFormat:output_type -> muxcore.formats.v1.CreateFormatResponse
+	7,  // 34: muxcore.formats.v1.FormatService.UpdateFormat:output_type -> muxcore.formats.v1.UpdateFormatResponse
+	9,  // 35: muxcore.formats.v1.FormatService.DeleteFormat:output_type -> muxcore.formats.v1.DeleteFormatResponse
+	13, // 36: muxcore.formats.v1.FormatService.ListProfiles:output_type -> muxcore.formats.v1.ListProfilesResponse
+	15, // 37: muxcore.formats.v1.FormatService.CreateProfile:output_type -> muxcore.formats.v1.CreateProfileResponse
+	17, // 38: muxcore.formats.v1.FormatService.UpdateProfile:output_type -> muxcore.formats.v1.UpdateProfileResponse
+	19, // 39: muxcore.formats.v1.FormatService.DeleteProfile:output_type -> muxcore.formats.v1.DeleteProfileResponse
+	21, // 40: muxcore.formats.v1.FormatService.ScoreRelease:output_type -> muxcore.formats.v1.ScoreReleaseResponse
+	25, // 41: muxcore.formats.v1.FormatService.ParseQuality:output_type -> muxcore.formats.v1.ParseQualityResponse
+	28, // 42: muxcore.formats.v1.FormatService.ListReleaseProfiles:output_type -> muxcore.formats.v1.ListReleaseProfilesResponse
+	30, // 43: muxcore.formats.v1.FormatService.UpsertReleaseProfile:output_type -> muxcore.formats.v1.UpsertReleaseProfileResponse
+	32, // 44: muxcore.formats.v1.FormatService.DeleteReleaseProfile:output_type -> muxcore.formats.v1.DeleteReleaseProfileResponse
+	34, // 45: muxcore.formats.v1.FormatService.SyncTrashGuides:output_type -> muxcore.formats.v1.SyncTrashGuidesResponse
+	32, // [32:46] is the sub-list for method output_type
+	18, // [18:32] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_proto_formatsv1_formats_proto_init() }
@@ -2335,13 +2450,14 @@ func file_proto_formatsv1_formats_proto_init() {
 	if File_proto_formatsv1_formats_proto != nil {
 		return
 	}
+	file_proto_formatsv1_formats_proto_msgTypes[29].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_formatsv1_formats_proto_rawDesc), len(file_proto_formatsv1_formats_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   37,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

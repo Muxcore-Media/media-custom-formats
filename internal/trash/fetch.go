@@ -14,9 +14,18 @@ import (
 
 const DefaultArchiveURL = "https://github.com/TRaSH-Guides/Guides/archive/refs/heads/master.tar.gz"
 
+// DefaultCacheMaxAge is how long a downloaded Guides cache is reused before refresh.
+const DefaultCacheMaxAge = 7 * 24 * time.Hour
+
+// ResolveOptions controls cache refresh behaviour for ResolveRoot.
+type ResolveOptions struct {
+	Force  bool
+	MaxAge time.Duration
+}
+
 // ResolveRoot returns a local Guides root.
 // If path is set and valid, it is used. Otherwise archiveURL is downloaded into cacheDir.
-func ResolveRoot(path, archiveURL, cacheDir string) (string, error) {
+func ResolveRoot(path, archiveURL, cacheDir string, opts ResolveOptions) (string, error) {
 	path = strings.TrimSpace(path)
 	if path != "" {
 		if _, err := os.Stat(filepath.Join(path, "metadata.json")); err != nil {
@@ -31,8 +40,12 @@ func ResolveRoot(path, archiveURL, cacheDir string) (string, error) {
 		cacheDir = filepath.Join(os.TempDir(), "muxcore-trash-guides")
 	}
 	dest := filepath.Join(cacheDir, "Guides")
-	if _, err := os.Stat(filepath.Join(dest, "metadata.json")); err == nil {
-		return dest, nil
+	metaPath := filepath.Join(dest, "metadata.json")
+	if _, err := os.Stat(metaPath); err == nil {
+		if !opts.Force && !cacheStale(metaPath, opts.MaxAge) {
+			return dest, nil
+		}
+		_ = os.RemoveAll(dest)
 	}
 	if err := os.MkdirAll(cacheDir, 0o700); err != nil {
 		return "", err
@@ -59,6 +72,17 @@ func ResolveRoot(path, archiveURL, cacheDir string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("downloaded archive did not contain metadata.json under %s", cacheDir)
+}
+
+func cacheStale(metaPath string, maxAge time.Duration) bool {
+	if maxAge <= 0 {
+		maxAge = DefaultCacheMaxAge
+	}
+	info, err := os.Stat(metaPath)
+	if err != nil {
+		return true
+	}
+	return time.Since(info.ModTime()) > maxAge
 }
 
 func downloadAndExtract(url, destDir string) error {

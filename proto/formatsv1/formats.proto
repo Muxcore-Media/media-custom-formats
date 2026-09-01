@@ -81,6 +81,11 @@ message DeleteFormatResponse {}
 
 // ── Quality Profiles ───────────────────────────────────────────
 
+message QualityAllowItem {
+  string name = 1;
+  bool allowed = 2;
+}
+
 message QualityProfile {
   string id = 1;
   string name = 2;
@@ -91,6 +96,7 @@ message QualityProfile {
   map<string, int32> format_scores = 7;  // format_id → score
   string created_at = 8;
   string updated_at = 9;
+  repeated QualityAllowItem quality_items = 10;
 }
 
 message ListProfilesRequest {}
@@ -150,6 +156,10 @@ message ScoreReleaseResponse {
   int32 format_score = 3;
   repeated FormatMatch format_matches = 4;
   QualityInfo quality = 5;
+  bool rejected = 6;
+  string rejected_reason = 7;
+  bool meets_min_score = 8;
+  bool meets_cutoff = 9;
 }
 
 message FormatMatch {
@@ -199,7 +209,7 @@ message UpsertReleaseProfileRequest {
   repeated string must_contain = 4;
   repeated string must_not_contain = 5;
   int32 preferred_score = 6;
-  bool enabled = 7;
+  optional bool enabled = 7;
 }
 
 message UpsertReleaseProfileResponse {
@@ -224,6 +234,8 @@ message SyncTrashGuidesRequest {
   bool import_profiles = 3;
   // Services to import: "radarr", "sonarr". Empty → both.
   repeated string services = 4;
+  // When true, re-download the guides archive even if a cache exists.
+  bool force = 5;
 }
 
 message SyncTrashGuidesResponse {

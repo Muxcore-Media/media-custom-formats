@@ -72,12 +72,13 @@ Admin UI: **Custom Formats** at `/formats` (including **Sync TRaSH Guides**), qu
 
 ### Scheduled / automated sync
 
-There is no built-in scheduler-cron job for TRaSH sync yet. Prefer one of:
+Built-in options:
 
 1. **On start:** `FORMATS_TRASH_SYNC=true` (and optional `FORMATS_TRASH_IMPORT_PROFILES`, `FORMATS_TRASH_SCORE_SET`, `FORMATS_TRASH_SERVICES`)
-2. **Settings:** set `trash_sync_now=true` (or use admin Settings for the formats module)
-3. **Admin UI:** Formats page → Sync TRaSH Guides
-4. **External cron:** call the gRPC `SyncTrashGuides` RPC or re-trigger via settings
+2. **Interval:** `FORMATS_TRASH_INTERVAL=<hours>` runs an in-process ticker that refreshes stale cache and re-syncs
+3. **Settings:** set `trash_sync_now=true` (or use admin Settings for the formats module)
+4. **Admin UI:** Formats page → Sync TRaSH Guides
+5. **External cron:** call the gRPC `SyncTrashGuides` RPC or re-trigger via settings
 
 ---
 
@@ -95,6 +96,7 @@ There is no built-in scheduler-cron job for TRaSH sync yet. Prefer one of:
 | `FORMATS_TRASH_SCORE_SET` | `default` | `trash_scores` key (e.g. `german`, `anime-radarr`) |
 | `FORMATS_TRASH_IMPORT_PROFILES` | `` | `true` = also upsert quality profiles |
 | `FORMATS_TRASH_SERVICES` | `radarr,sonarr` | Comma list of services to import |
+| `FORMATS_TRASH_INTERVAL` | `0` | Periodic sync interval in hours (`0` = disabled) |
 | `MUXCORE_MODULE_ID` | `media-custom-formats` | Module ID for mesh registration |
 | `MUXCORE_INSECURE_DISABLE_TLS` | `` | Set to `true` for insecure mesh (dev only) |
 | `MUXCORE_GRPC_ADDR` / `--muxcore-mesh-addr` | (SDK) | Core mesh address |
@@ -129,13 +131,13 @@ make proto   # regenerate formatsv1 from proto/formatsv1/formats.proto
 make trash-guides  # sparse-clone official Guides into .cache/trash-guides
 ```
 
-Requires a local `../core` checkout (`go.mod` replace directives).
+Requires Go 1.26+. Forgejo CI fetches `github.com/Muxcore-Media/*` modules from origin; local dev may use a sibling `../core` checkout via `go.work` or module cache.
 
 ---
 
 ## Compatibility
 
-See [COMPATIBILITY.md](COMPATIBILITY.md). Module version `0.1.9`, min core `0.4.0`.
+See [COMPATIBILITY.md](COMPATIBILITY.md). Module version `0.1.9`, min core `0.5.8`.
 
 ---
 

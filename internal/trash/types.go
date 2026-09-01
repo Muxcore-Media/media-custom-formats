@@ -41,15 +41,29 @@ type SpecFields struct {
 	Value json.RawMessage `json:"value"`
 }
 
+// SizeSpecFields holds min/max size in GB for SizeSpecification.
+type SizeSpecFields struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+}
+
+// QualityProfileItem is one allowed/denied quality row from a TRaSH profile.
+type QualityProfileItem struct {
+	Name    string   `json:"name"`
+	Allowed bool     `json:"allowed"`
+	Items   []string `json:"items"`
+}
+
 // QualityProfileJSON is a TRaSH quality profile definition.
 type QualityProfileJSON struct {
-	TrashID           string            `json:"trash_id"`
-	Name              string            `json:"name"`
-	TrashScoreSet     string            `json:"trash_score_set"`
-	UpgradeAllowed    bool              `json:"upgradeAllowed"`
-	MinFormatScore    int               `json:"minFormatScore"`
-	CutoffFormatScore int               `json:"cutoffFormatScore"`
-	FormatItems       map[string]string `json:"formatItems"` // name → trash_id
+	TrashID           string               `json:"trash_id"`
+	Name              string               `json:"name"`
+	TrashScoreSet     string               `json:"trash_score_set"`
+	UpgradeAllowed    bool                 `json:"upgradeAllowed"`
+	MinFormatScore    int                  `json:"minFormatScore"`
+	CutoffFormatScore int                  `json:"cutoffFormatScore"`
+	FormatItems       map[string]string    `json:"formatItems"` // name → trash_id
+	Items             []QualityProfileItem `json:"items"`
 }
 
 // FieldValueString unwraps fields.value whether it is a JSON string or number.

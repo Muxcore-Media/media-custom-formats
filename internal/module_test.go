@@ -229,6 +229,9 @@ func TestParseQuality(t *testing.T) {
 		{"Show.S01E01.1080p.BluRay.x264.mkv", "1080p", "BluRay", "h264", false},
 		{"Film.2020.720p.WEB-DL.AVC.mkv", "720p", "WEB-DL", "h264", false},
 		{"Test.2020.1080p.WEB-DL.HDR.DV.mkv", "1080p", "WEB-DL", "", true},
+		{"Watchmen.2009.1080p.BluRay.x264", "1080p", "BluRay", "h264", false},
+		{"Its.Always.Sunny.in.Philadelphia.S01E01", "SD", "", "", false},
+		{"Movie.HDTV.x264", "SD", "HDTV", "h264", false},
 	}
 	for _, tt := range tests {
 		resp, err := m.ParseQuality(ctx, &formatsv1.ParseQualityRequest{Title: tt.title})
@@ -377,5 +380,68 @@ func TestHealth(t *testing.T) {
 	ctx := context.Background()
 	if err := m.Health(ctx); err != nil {
 		t.Fatal("expected health to pass")
+	}
+}
+
+func TestScoreReleaseProfileThresholds(t *testing.T) {
+	m := newTestModule(t)
+	ctx := context.Background()
+
+	p, err := m.CreateProfile(ctx, &formatsv1.CreateProfileRequest{
+		Name: "Strict", MinScore: 150, CutoffScore: 150,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	low, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{
+		Title: "Movie.2020.720p.WEB-DL.x264", ProfileId: p.Profile.Id,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !low.GetRejected() || low.GetMeetsMinScore() {
+		t.Fatalf("expected min-score rejection, got rejected=%v meets_min=%v reason=%q",
+			low.GetRejected(), low.GetMeetsMinScore(), low.GetRejectedReason())
+	}
+
+	high, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{
+		Title: "Movie.2020.2160p.Remux.HEVC.HDR.mkv", ProfileId: p.Profile.Id,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if high.GetRejected() {
+		t.Fatalf("expected acceptance, reason=%q", high.GetRejectedReason())
+	}
+	if !high.GetMeetsMinScore() || !high.GetMeetsCutoff() {
+		t.Fatalf("meets_min=%v meets_cutoff=%v total=%d", high.GetMeetsMinScore(), high.GetMeetsCutoff(), high.GetTotalScore())
+	}
+}
+
+func TestScoreReleaseDisallowedQuality(t *testing.T) {
+	m := newTestModule(t)
+	ctx := context.Background()
+
+	p, err := m.CreateProfile(ctx, &formatsv1.CreateProfileRequest{Name: "No CAM"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	itemsJSON := `[{"name":"CAM","allowed":false}]`
+	_, err = m.db.Exec(`UPDATE quality_profiles SET quality_items_json=?, updated_at=? WHERE id=?`, itemsJSON, now, p.Profile.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resp, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{
+		Title: "Movie.2020.CAM.x264", ProfileId: p.Profile.Id,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resp.GetRejected() || resp.GetTotalScore() != 0 {
+		t.Fatalf("expected CAM rejection, rejected=%v total=%d reason=%q",
+			resp.GetRejected(), resp.GetTotalScore(), resp.GetRejectedReason())
 	}
 }

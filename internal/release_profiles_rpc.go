@@ -9,6 +9,8 @@ import (
 )
 
 func (m *Module) ListReleaseProfiles(ctx context.Context, _ *formatsv1.ListReleaseProfilesRequest) (*formatsv1.ListReleaseProfilesResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	groups := m.loadReleaseGroups()
 	out := make([]*formatsv1.ReleaseProfile, 0, len(groups))
 	for _, g := range groups {
@@ -30,6 +32,10 @@ func (m *Module) UpsertReleaseProfile(ctx context.Context, req *formatsv1.Upsert
 	if score == 0 {
 		score = 10
 	}
+	enabled := true
+	if req.Enabled != nil {
+		enabled = req.GetEnabled()
+	}
 	g := releaseProfileGroup{
 		ID:             strings.TrimSpace(req.GetId()),
 		Name:           name,
@@ -37,7 +43,7 @@ func (m *Module) UpsertReleaseProfile(ctx context.Context, req *formatsv1.Upsert
 		MustContain:    req.GetMustContain(),
 		MustNotContain: req.GetMustNotContain(),
 		PreferredScore: score,
-		Enabled:        req.GetEnabled(),
+		Enabled:        enabled,
 	}
 	if err := m.upsertReleaseGroup(ctx, g); err != nil {
 		return nil, err

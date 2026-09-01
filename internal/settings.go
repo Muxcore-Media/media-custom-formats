@@ -32,6 +32,7 @@ func (m *Module) settingsDefs() []contracts.SettingDef {
 	path := m.trashGuidesPath
 	scoreSet := m.trashScoreSet
 	importProfiles := m.trashImportProfiles
+	interval := m.trashSyncIntervalHours
 	m.mu.RUnlock()
 	return []contracts.SettingDef{
 		{
@@ -85,6 +86,16 @@ func (m *Module) settingsDefs() []contracts.SettingDef {
 			Group:       "TRaSH Guides",
 		},
 		{
+			Key:         "trash_sync_interval_hours",
+			Label:       "TRaSH Sync Interval (hours)",
+			Type:        contracts.SettingTypeString,
+			Default:     "0",
+			Value:       strconv.Itoa(interval),
+			Description: "When >0, periodically sync TRaSH Guides (FORMATS_TRASH_INTERVAL). 0 disables the in-process scheduler.",
+			Required:    false,
+			Group:       "TRaSH Guides",
+		},
+		{
 			Key:         "trash_sync_now",
 			Label:       "Sync TRaSH Guides Now",
 			Type:        contracts.SettingTypeString,
@@ -109,6 +120,7 @@ func (m *Module) updateSetting(key, value string) error {
 		db := m.db
 		syncOn := m.trashSyncOnStart
 		m.mu.Unlock()
+		m.persistSetting("seed_defaults", strconv.FormatBool(on))
 		if on && db != nil {
 			ctx := context.Background()
 			if !syncOn {
@@ -125,11 +137,14 @@ func (m *Module) updateSetting(key, value string) error {
 		m.mu.Lock()
 		m.trashSyncOnStart = on
 		m.mu.Unlock()
+		m.persistSetting("trash_sync_on_start", strconv.FormatBool(on))
 		return nil
 	case "trash_guides_path", "FORMATS_TRASH_GUIDES_PATH":
+		v := strings.TrimSpace(value)
 		m.mu.Lock()
-		m.trashGuidesPath = strings.TrimSpace(value)
+		m.trashGuidesPath = v
 		m.mu.Unlock()
+		m.persistSetting("trash_guides_path", v)
 		return nil
 	case "trash_score_set", "FORMATS_TRASH_SCORE_SET":
 		m.mu.Lock()
@@ -137,7 +152,9 @@ func (m *Module) updateSetting(key, value string) error {
 		if m.trashScoreSet == "" {
 			m.trashScoreSet = "default"
 		}
+		scoreSet := m.trashScoreSet
 		m.mu.Unlock()
+		m.persistSetting("trash_score_set", scoreSet)
 		return nil
 	case "trash_import_profiles", "FORMATS_TRASH_IMPORT_PROFILES":
 		on, err := parseBool(value)
@@ -147,6 +164,18 @@ func (m *Module) updateSetting(key, value string) error {
 		m.mu.Lock()
 		m.trashImportProfiles = on
 		m.mu.Unlock()
+		m.persistSetting("trash_import_profiles", strconv.FormatBool(on))
+		return nil
+	case "trash_sync_interval_hours", "FORMATS_TRASH_INTERVAL":
+		n, err := strconv.Atoi(strings.TrimSpace(value))
+		if err != nil || n < 0 {
+			return fmt.Errorf("invalid interval %q", value)
+		}
+		m.mu.Lock()
+		m.trashSyncIntervalHours = n
+		m.mu.Unlock()
+		m.persistSetting("trash_sync_interval_hours", strconv.Itoa(n))
+		m.startTrashSyncTicker()
 		return nil
 	case "trash_sync_now":
 		on, err := parseBool(value)

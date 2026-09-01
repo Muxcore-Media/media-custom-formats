@@ -46,6 +46,23 @@ func TestSyncTrashGuidesFixtures(t *testing.T) {
 		t.Fatalf("expected at least one quality profile, got %d", resp.GetProfilesUpserted())
 	}
 
+	profiles, err := m.ListProfiles(ctx, &formatsv1.ListProfilesRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var hasItems bool
+	for _, p := range profiles.GetProfiles() {
+		for _, item := range p.GetQualityItems() {
+			if item.GetName() == "CAM" && !item.GetAllowed() {
+				hasItems = true
+				break
+			}
+		}
+	}
+	if !hasItems {
+		t.Fatal("expected imported profile quality_items with CAM disallowed")
+	}
+
 	list, err := m.ListFormats(ctx, &formatsv1.ListFormatsRequest{})
 	if err != nil {
 		t.Fatal(err)

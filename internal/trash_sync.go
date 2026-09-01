@@ -31,7 +31,10 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 		services = m.trashServices
 	}
 
-	root, err := trash.ResolveRoot(path, m.trashGuidesURL, m.trashCacheDir)
+	root, err := trash.ResolveRoot(path, m.trashGuidesURL, m.trashCacheDir, trash.ResolveOptions{
+		Force:  req.GetForce(),
+		MaxAge: trash.DefaultCacheMaxAge,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -115,18 +118,20 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 					}
 				}
 				scoresJSON, _ := json.Marshal(formatScores)
+				itemsJSON := encodeQualityItemsJSON(qualityItemsFromTrash(qp.Items))
 				name, _ := m.uniqueProfileName(qp.TrashID, qp.Name, item.Service)
 				_, err := m.db.ExecContext(ctx, `
-					INSERT INTO quality_profiles (id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, created_at, updated_at)
-					VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
+					INSERT INTO quality_profiles (id, name, min_score, cutoff_score, upgrade_allowed, upgrade_delay_minutes, format_scores_json, quality_items_json, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
 					ON CONFLICT(id) DO UPDATE SET
 						name=excluded.name,
 						min_score=excluded.min_score,
 						cutoff_score=excluded.cutoff_score,
 						upgrade_allowed=excluded.upgrade_allowed,
 						format_scores_json=excluded.format_scores_json,
+						quality_items_json=excluded.quality_items_json,
 						updated_at=excluded.updated_at
-				`, qp.TrashID, name, qp.MinFormatScore, qp.CutoffFormatScore, boolToInt(qp.UpgradeAllowed), string(scoresJSON), now, now)
+				`, qp.TrashID, name, qp.MinFormatScore, qp.CutoffFormatScore, boolToInt(qp.UpgradeAllowed), string(scoresJSON), itemsJSON, now, now)
 				if err != nil {
 					resp.Warnings = append(resp.Warnings, fmt.Sprintf("profile %s: %v", qp.Name, err))
 					continue

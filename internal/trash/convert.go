@@ -104,6 +104,44 @@ func convertSpec(spec Specification) (*formatsv1.FormatRule, bool, string) {
 			return nil, false, "empty quality modifier"
 		}
 		return rule, true, ""
+	case "SizeSpecification":
+		var sizeFields SizeSpecFields
+		if err := json.Unmarshal(spec.Fields, &sizeFields); err != nil {
+			return nil, false, "invalid size fields"
+		}
+		if sizeFields.Min > 0 {
+			rule.Field = "size"
+			rule.Op = "gt"
+			rule.Value = strconv.FormatInt(int64(sizeFields.Min*1e9), 10)
+			return rule, true, ""
+		}
+		if sizeFields.Max > 0 {
+			rule.Field = "size"
+			rule.Op = "lte"
+			rule.Value = strconv.FormatInt(int64(sizeFields.Max*1e9), 10)
+			return rule, true, ""
+		}
+		return nil, false, "size min/max not set"
+	case "YearSpecification":
+		if val == "" {
+			return nil, false, "empty year"
+		}
+		rule.Field = "title"
+		rule.Op = "matches"
+		rule.Value = `(?i)\b` + regexpQuote(val) + `\b`
+		return rule, true, ""
+	case "EditionSpecification":
+		if val == "" {
+			return nil, false, "empty edition pattern"
+		}
+		rule.Field = "title"
+		rule.Op = "matches"
+		if strings.HasPrefix(val, "(?") {
+			rule.Value = val
+		} else {
+			rule.Value = `(?i)\b` + regexpQuote(val) + `\b`
+		}
+		return rule, true, ""
 	case "LanguageSpecification":
 		// ScoreRelease only sees the title; approximate via common language tokens.
 		pat := languageTitlePattern(val)
@@ -121,6 +159,18 @@ func convertSpec(spec Specification) (*formatsv1.FormatRule, bool, string) {
 	}
 }
 
+func regexpQuote(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case '.', '+', '*', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|', '\\':
+			b.WriteRune('\\')
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
 func languageTitlePattern(id string) string {
 	// Radarr Language enum subset commonly used in TRaSH Guides.
 	switch id {
@@ -130,14 +180,58 @@ func languageTitlePattern(id string) string {
 		return `(?i)\b(english|eng|en)\b`
 	case "2": // French
 		return `(?i)\b(french|fran[cç]ais|vff|vfq|truefrench|multi)\b`
+	case "3": // Spanish (Latin)
+		return `(?i)\b(spanish|espanol|castellano|latino)\b`
 	case "4": // German
 		return `(?i)\b(german|deutsch|dl|german.?dl)\b`
+	case "5": // Italian
+		return `(?i)\b(italian|ita|italiano)\b`
+	case "6": // Korean
+		return `(?i)\b(korean|kor|hangul)\b`
+	case "7": // Chinese
+		return `(?i)\b(chinese|chi|mandarin|cantonese)\b`
 	case "8": // Japanese
 		return `(?i)\b(japanese|jap|jpn)\b`
+	case "9": // Portuguese
+		return `(?i)\b(portuguese|portugues|pt-?br|pt-?pt)\b`
 	case "10": // Spanish
 		return `(?i)\b(spanish|espanol|castellano|latino)\b`
+	case "11": // Polish
+		return `(?i)\b(polish|pol|polski)\b`
+	case "12": // Russian
+		return `(?i)\b(russian|rus|russkiy)\b`
+	case "13": // Arabic
+		return `(?i)\b(arabic|ara)\b`
+	case "14": // Hindi
+		return `(?i)\b(hindi|hin)\b`
+	case "15": // Turkish
+		return `(?i)\b(turkish|tur|turkce)\b`
+	case "16": // Danish
+		return `(?i)\b(danish|dan|dansk)\b`
+	case "17": // Finnish
+		return `(?i)\b(finnish|fin|suomi)\b`
+	case "18": // Swedish
+		return `(?i)\b(swedish|swe|svenska)\b`
+	case "19": // Norwegian
+		return `(?i)\b(norwegian|nor|norsk)\b`
+	case "20": // Czech
+		return `(?i)\b(czech|cze|cesky)\b`
 	case "21": // Dutch
-		return `(?i)\b(dutch|nld|nl)\b`
+		return `(?i)\b(dutch|nld|nl|nederlands)\b`
+	case "22": // Romanian
+		return `(?i)\b(romanian|rom|romana)\b`
+	case "23": // Bulgarian
+		return `(?i)\b(bulgarian|bul)\b`
+	case "24": // Greek
+		return `(?i)\b(greek|gre|ellinika)\b`
+	case "25": // Hungarian
+		return `(?i)\b(hungarian|hun|magyar)\b`
+	case "26": // Hebrew
+		return `(?i)\b(hebrew|heb)\b`
+	case "27": // Thai
+		return `(?i)\b(thai|tha)\b`
+	case "28": // Vietnamese
+		return `(?i)\b(vietnamese|vie)\b`
 	default:
 		return ""
 	}
@@ -160,4 +254,20 @@ func ScoreForSet(scores map[string]int, scoreSet string) int {
 // ParseIntValue parses a numeric rule value.
 func ParseIntValue(v string) (int, error) {
 	return strconv.Atoi(strings.TrimSpace(v))
+}
+
+// FlattenQualityItems expands nested TRaSH profile items into a flat allowed map.
+func FlattenQualityItems(items []QualityProfileItem) map[string]bool {
+	out := make(map[string]bool)
+	for _, item := range items {
+		if len(item.Items) > 0 {
+			for _, sub := range item.Items {
+				out[sub] = item.Allowed
+			}
+		}
+		if item.Name != "" {
+			out[item.Name] = item.Allowed
+		}
+	}
+	return out
 }

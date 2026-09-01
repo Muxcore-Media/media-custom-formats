@@ -104,6 +104,9 @@ func TestScoreReleaseGoldenSeeds(t *testing.T) {
 					resp.GetTotalScore(), tc.wantTotal, resp.GetQualityScore(), resp.GetFormatScore(),
 					formatMatchNames(resp))
 			}
+			if tc.wantRejected && !resp.GetRejected() {
+				t.Errorf("expected rejected=true")
+			}
 			for _, name := range tc.wantFmtNames {
 				if !hasFormatMatch(resp, name) {
 					t.Errorf("missing format match %q in %v", name, formatMatchNames(resp))
