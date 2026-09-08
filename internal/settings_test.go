@@ -9,7 +9,7 @@ import (
 func TestSettingsSeedDefaults(t *testing.T) {
 	m := NewModule(Config{GRPCAddr: ":0", SeedDefaults: true})
 	defs := m.Settings()
-	if len(defs) != 1 || defs[0].Key != "seed_defaults" || defs[0].Type != contracts.SettingTypeBool {
+	if len(defs) < 1 || defs[0].Key != "seed_defaults" || defs[0].Type != contracts.SettingTypeBool {
 		t.Fatalf("defs=%+v", defs)
 	}
 	if defs[0].Value != "true" {

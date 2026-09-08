@@ -83,6 +83,71 @@ func TestModuleInfo(t *testing.T) {
 	}
 }
 
+func TestReleaseProfileCRUDAndReject(t *testing.T) {
+	m := newTestModule(t)
+	ctx := context.Background()
+
+	off := false
+	created, err := m.UpsertReleaseProfile(ctx, &formatsv1.UpsertReleaseProfileRequest{
+		Name:           "No CAM",
+		MustNotContain: []string{"cam", "telesync"},
+		Preferred:      []string{"bluray"},
+		PreferredScore: 20,
+		Enabled:        protoBool(true),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.Profile.GetId() == "" || !created.Profile.GetEnabled() {
+		t.Fatalf("created %#v", created.Profile)
+	}
+	listed, err := m.ListReleaseProfiles(ctx, &formatsv1.ListReleaseProfilesRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(listed.Profiles) != 1 {
+		t.Fatalf("listed %d", len(listed.Profiles))
+	}
+	rejected, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{Title: "Movie.2024.CAM.mkv"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rejected.GetTotalScore() != -100000 {
+		t.Fatalf("expected reject score, got %d", rejected.GetTotalScore())
+	}
+	bonus, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{Title: "Movie.2024.Bluray.1080p.mkv"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bonus.GetTotalScore() < 20 {
+		t.Fatalf("expected preferred bonus, got %d", bonus.GetTotalScore())
+	}
+	if _, err := m.UpsertReleaseProfile(ctx, &formatsv1.UpsertReleaseProfileRequest{
+		Id: created.Profile.GetId(), Name: "No CAM", Enabled: &off,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	allowed, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{Title: "Movie.2024.CAM.mkv"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if allowed.GetTotalScore() == -100000 {
+		t.Fatal("paused restriction still rejected")
+	}
+	if _, err := m.DeleteReleaseProfile(ctx, &formatsv1.DeleteReleaseProfileRequest{Id: created.Profile.GetId()}); err != nil {
+		t.Fatal(err)
+	}
+	empty, err := m.ListReleaseProfiles(ctx, &formatsv1.ListReleaseProfilesRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(empty.Profiles) != 0 {
+		t.Fatalf("expected empty after delete, got %d", len(empty.Profiles))
+	}
+}
+
+func protoBool(v bool) *bool { return &v }
+
 func TestCreateAndListFormat(t *testing.T) {
 	m := newTestModule(t)
 	ctx := context.Background()

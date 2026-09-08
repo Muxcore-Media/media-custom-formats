@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -36,6 +37,10 @@ type Module struct {
 	seedDefaults bool
 	grpcSrv      *grpc.Server
 	grpcLis      net.Listener
+
+	// officialTrashURL overrides the hardcoded TRaSH-Guides zip (tests only).
+	officialTrashURL string
+	trashHTTP        *http.Client
 }
 
 type Config struct {
@@ -76,7 +81,7 @@ func (m *Module) Info() contracts.ModuleInfo {
 	return contracts.ModuleInfo{
 		ID:             m.id,
 		Name:           "Custom Formats",
-		Version:      "0.1.6",
+		Version:        "0.1.11",
 		Roles:          []string{"scoring"},
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
@@ -144,6 +149,7 @@ func (m *Module) Init(ctx context.Context) error {
 		m.seedDefaultFormats(ctx)
 		m.seedDefaultReleaseGroups(ctx)
 	}
+	m.maybeSyncTrashOnStart(ctx)
 
 	lis, err := net.Listen("tcp", m.grpcAddr)
 	if err != nil {
@@ -521,12 +527,14 @@ func matchFormat(f *formatsv1.CustomFormat, title string, size int64, seeders in
 	if len(f.GetRules()) == 0 {
 		return true, ""
 	}
+	var last string
 	for _, rule := range f.GetRules() {
-		if matchRule(rule, title, size, seeders) {
-			return true, rule.GetValue()
+		if !matchRule(rule, title, size, seeders) {
+			return false, ""
 		}
+		last = rule.GetValue()
 	}
-	return false, ""
+	return true, last
 }
 
 func matchRule(rule *formatsv1.FormatRule, title string, size int64, seeders int32) bool {

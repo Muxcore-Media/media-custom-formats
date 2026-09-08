@@ -26,6 +26,7 @@ Release title/size/seeders ──→ media-custom-formats ──→ Score + qual
 - **Quality profiles** — min/cutoff scores, upgrade settings, per-format score overrides
 - **ScoreRelease / ParseQuality** — combine quality heuristics with format matches
 - **Default seeds** — on empty DB, seeds Remux/HDR/x265/Proper/CAM formats and a Default Blocklist release group (enabled by default in the binary)
+- **TRaSH / Recyclarr sync** — `SyncTrashGuides` imports the bundled official TRaSH catalog (WEB/Remux/Bluray tiers, HDR, x265, audio, LQ), a local Guides tree, or `guides_path=official` (hardcoded TRaSH-Guides GitHub zip — the Recyclarr-complete catalog). Household Settings → Quality and admin `/formats/sync-trash` call this RPC. Clients cannot supply a download URL.
 
 ### Default seeded custom formats
 
@@ -56,6 +57,12 @@ Admin UI: **Custom Formats** at `/formats`, quality profiles at `/formats/profil
 | `FORMATS_DB_PATH` | `/var/lib/media-custom-formats/formats.db` | SQLite database path |
 | `FORMATS_GRPC_ADDR` | `:9490` | Module gRPC listen address |
 | `FORMATS_SEED_DEFAULTS` | (see note) | Set to `true` to enable seeding when not already enabled via config |
+| `FORMATS_TRASH_SYNC` | unset (off) | `true` imports TRaSH packs on start |
+| `FORMATS_TRASH_IMPORT_PROFILES` | `true` when syncing from start | Also upsert quality profiles |
+| `FORMATS_TRASH_SCORE_SET` | `default` | `trash_scores` key |
+| `FORMATS_TRASH_SERVICES` | `radarr,sonarr` | Which guide trees to import |
+| `FORMATS_TRASH_GUIDES_PATH` | (bundled fixture) | Local TRaSH-Guides root (`docs/json/…`), or `official` for the GitHub archive |
+| `FORMATS_TRASH_OFFICIAL` | unset | When true on start sync, download the hardcoded TRaSH-Guides zip |
 | `MUXCORE_MODULE_ID` | `media-custom-formats` | Module ID for mesh registration |
 | `MUXCORE_INSECURE_DISABLE_TLS` | `` | Set to `true` for insecure mesh (dev only) |
 | `MUXCORE_GRPC_ADDR` / `--muxcore-mesh-addr` | (SDK) | Core mesh address |

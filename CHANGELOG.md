@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.1.11] — 2026-09-08
+
+### Added
+- `SyncTrashGuides` `guides_path=official` downloads the hardcoded TRaSH-Guides GitHub archive into the module data dir (Recyclarr-complete catalog). Tests use a fixture zip; clients cannot supply a URL.
+- `FORMATS_TRASH_OFFICIAL=true` uses that official zip on start sync.
+
+## [0.1.10] — 2026-09-08
+
+### Added
+- TRaSH `LanguageSpecification` and `IndexerFlagSpecification` map to title tokens so Language: Not English and FreeLeech score from the release name.
+- Official `language-not-english` and `freeleech` custom formats in the bundled offline pack.
+
+## [0.1.9] — 2026-09-08
+
+### Added
+- `ListReleaseProfiles` / `UpsertReleaseProfile` / `DeleteReleaseProfile` so household Settings can edit must-contain / must-not-contain / preferred terms (Radarr/Sonarr release profiles). Scoring already applied these groups.
+
+## [0.1.8] — 2026-09-08
+
+### Added
+- Official TRaSH Guides custom formats (WEB/Remux/Bluray tiers, HDR, x265, audio, LQ) vendored offline.
+- Parser maps ReleaseGroup, Source, Resolution, and QualityModifier specs so Recyclarr JSON imports.
+
+## [0.1.7] — 2026-09-08
+
+### Added
+
+- `SyncTrashGuides` RPC: import Recyclarr-compatible TRaSH custom formats and quality profiles.
+- Bundled HD/UHD fixture pack (offline-safe). Optional `FORMATS_TRASH_GUIDES_PATH` for a local Guides clone.
+- `FORMATS_TRASH_SYNC=true` on start imports the pack (run-host / compose default).
+
 ## [0.1.6] — 2026-08-10
 
 ### Added

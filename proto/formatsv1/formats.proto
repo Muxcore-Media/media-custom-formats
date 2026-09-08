@@ -15,6 +15,11 @@ service FormatService {
 
   rpc ScoreRelease(ScoreReleaseRequest) returns (ScoreReleaseResponse);
   rpc ParseQuality(ParseQualityRequest) returns (ParseQualityResponse);
+  rpc SyncTrashGuides(SyncTrashGuidesRequest) returns (SyncTrashGuidesResponse);
+
+  rpc ListReleaseProfiles(ListReleaseProfilesRequest) returns (ListReleaseProfilesResponse);
+  rpc UpsertReleaseProfile(UpsertReleaseProfileRequest) returns (UpsertReleaseProfileResponse);
+  rpc DeleteReleaseProfile(DeleteReleaseProfileRequest) returns (DeleteReleaseProfileResponse);
 }
 
 // ── Custom Formats ────────────────────────────────────────────
@@ -164,3 +169,58 @@ message ParseQualityRequest {
 message ParseQualityResponse {
   QualityInfo quality = 1;
 }
+
+// ── TRaSH / Recyclarr sync ─────────────────────────────────────
+
+message SyncTrashGuidesRequest {
+  string score_set = 1;           // trash_scores key; default "default"
+  bool import_profiles = 2;       // also upsert quality profiles
+  repeated string services = 3;   // "radarr", "sonarr"; empty = both
+  string guides_path = 4;         // optional local TRaSH Guides root
+}
+
+message SyncTrashGuidesResponse {
+  int32 formats_upserted = 1;
+  int32 formats_skipped = 2;
+  int32 profiles_upserted = 3;
+  string guides_path = 4;
+  repeated string warnings = 5;
+}
+
+// ── Release restrictions (Radarr/Sonarr release profiles) ──────
+
+message ReleaseProfile {
+  string id = 1;
+  string name = 2;
+  repeated string preferred = 3;
+  repeated string must_contain = 4;
+  repeated string must_not_contain = 5;
+  int32 preferred_score = 6;
+  bool enabled = 7;
+}
+
+message ListReleaseProfilesRequest {}
+
+message ListReleaseProfilesResponse {
+  repeated ReleaseProfile profiles = 1;
+}
+
+message UpsertReleaseProfileRequest {
+  string id = 1;
+  string name = 2;
+  repeated string preferred = 3;
+  repeated string must_contain = 4;
+  repeated string must_not_contain = 5;
+  int32 preferred_score = 6;
+  optional bool enabled = 7;
+}
+
+message UpsertReleaseProfileResponse {
+  ReleaseProfile profile = 1;
+}
+
+message DeleteReleaseProfileRequest {
+  string id = 1;
+}
+
+message DeleteReleaseProfileResponse {}

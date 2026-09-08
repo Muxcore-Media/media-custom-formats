@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -38,11 +39,33 @@ func (m *Module) settingsDefs() []contracts.SettingDef {
 			Required:    false,
 			Group:       "Defaults",
 		},
+		{
+			Key:         "trash_sync",
+			Label:       "Sync TRaSH Guides",
+			Type:        contracts.SettingTypeBool,
+			Default:     "false",
+			Value:       os.Getenv("FORMATS_TRASH_SYNC"),
+			Description: "When true on start, import bundled Recyclarr-compatible TRaSH format packs (or FORMATS_TRASH_GUIDES_PATH / FORMATS_TRASH_OFFICIAL)",
+			Required:    false,
+			Group:       "TRaSH",
+		},
 	}
 }
 
 func (m *Module) updateSetting(key, value string) error {
 	switch key {
+	case "trash_sync", "FORMATS_TRASH_SYNC":
+		on, err := parseBool(value)
+		if err != nil {
+			return err
+		}
+		if on {
+			_ = os.Setenv("FORMATS_TRASH_SYNC", "true")
+			m.maybeSyncTrashOnStart(context.Background())
+		} else {
+			_ = os.Setenv("FORMATS_TRASH_SYNC", "false")
+		}
+		return nil
 	case "seed_defaults", "FORMATS_SEED_DEFAULTS":
 		on, err := parseBool(value)
 		if err != nil {
