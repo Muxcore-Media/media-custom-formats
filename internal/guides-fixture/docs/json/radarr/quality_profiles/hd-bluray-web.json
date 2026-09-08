@@ -1,0 +1,14 @@
+{
+  "trash_id": "qp_radarr_hd_bluray_web",
+  "name": "HD Bluray + WEB",
+  "minFormatScore": 0,
+  "cutoffFormatScore": 10000,
+  "upgradeAllowed": true,
+  "formatItems": [
+    { "trash_id": "a5d148168c4506b3ef71deff2ae3", "name": "Remux-1080p", "score": 1850 },
+    { "trash_id": "c3f91a772e5b44d0aa18e7c91b20", "name": "HDR", "score": 500 },
+    { "trash_id": "e5b13c994g7d66f2cc30g9e13d42", "name": "Repack/Proper", "score": 25 },
+    { "trash_id": "f6c24d005h8e77g3dd41h0f24e53", "name": "BR-DISK", "score": -10000 },
+    { "trash_id": "a7d35e116i9f88h4ee52i1g35f64", "name": "CAM", "score": -10000 }
+  ]
+}

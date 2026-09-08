@@ -1,0 +1,14 @@
+{
+  "trash_id": "f6c24d005h8e77g3dd41h0f24e53",
+  "name": "BR-DISK",
+  "trash_scores": { "default": -10000 },
+  "specifications": [
+    {
+      "name": "Disc image",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(br-?disk|iso|complete[ .]?bluray)\\b" }
+    }
+  ]
+}

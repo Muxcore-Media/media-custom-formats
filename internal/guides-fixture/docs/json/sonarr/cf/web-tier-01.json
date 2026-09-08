@@ -1,0 +1,21 @@
+{
+  "trash_id": "b8e46f227j0g99i5ff63j2h46g75",
+  "name": "WEB Tier 01",
+  "trash_scores": { "default": 100 },
+  "specifications": [
+    {
+      "name": "AMZN/NF/ATVP",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(amzn|nf|atvp|dsnp|hmax)\\b" }
+    },
+    {
+      "name": "WEB",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\bweb[ .\\-]?[rd]l\\b|\\bwebrip\\b" }
+    }
+  ]
+}

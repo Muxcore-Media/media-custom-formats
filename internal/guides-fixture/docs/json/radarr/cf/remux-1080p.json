@@ -1,0 +1,21 @@
+{
+  "trash_id": "a5d148168c4506b3ef71deff2ae3",
+  "name": "Remux-1080p",
+  "trash_scores": { "default": 1850 },
+  "specifications": [
+    {
+      "name": "Remux",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\bremux\\b" }
+    },
+    {
+      "name": "1080p",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(1080p|1920x1080)\\b" }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "trash_id": "a7d35e116i9f88h4ee52i1g35f64",
+  "name": "CAM",
+  "trash_scores": { "default": -10000 },
+  "specifications": [
+    {
+      "name": "CAM/TS",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(cam|hdcam|telesync|hdts|\\btc\\b)\\b" }
+    }
+  ]
+}

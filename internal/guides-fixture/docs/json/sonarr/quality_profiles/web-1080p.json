@@ -1,0 +1,12 @@
+{
+  "trash_id": "qp_sonarr_web_1080p",
+  "name": "WEB-1080p",
+  "minFormatScore": 0,
+  "cutoffFormatScore": 10000,
+  "upgradeAllowed": true,
+  "formatItems": [
+    { "trash_id": "b8e46f227j0g99i5ff63j2h46g75", "name": "WEB Tier 01", "score": 100 },
+    { "trash_id": "e5b13c994g7d66f2cc30g9e13d42", "name": "Repack/Proper", "score": 25 },
+    { "trash_id": "a7d35e116i9f88h4ee52i1g35f64", "name": "CAM", "score": -10000 }
+  ]
+}

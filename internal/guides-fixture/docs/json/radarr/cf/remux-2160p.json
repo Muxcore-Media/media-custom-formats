@@ -1,0 +1,21 @@
+{
+  "trash_id": "b7e2601c9d4f80aa31c8e6f44d12",
+  "name": "Remux-2160p",
+  "trash_scores": { "default": 1850 },
+  "specifications": [
+    {
+      "name": "Remux",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\bremux\\b" }
+    },
+    {
+      "name": "2160p",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(2160p|4k|uhd)\\b" }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "trash_id": "e5b13c994g7d66f2cc30g9e13d42",
+  "name": "Repack/Proper",
+  "trash_scores": { "default": 25 },
+  "specifications": [
+    {
+      "name": "Repack or Proper",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(proper|repack)\\b" }
+    }
+  ]
+}

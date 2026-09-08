@@ -1,0 +1,15 @@
+{
+  "trash_id": "qp_radarr_uhd_bluray_web",
+  "name": "UHD Bluray + WEB",
+  "minFormatScore": 0,
+  "cutoffFormatScore": 10000,
+  "upgradeAllowed": true,
+  "formatItems": [
+    { "trash_id": "b7e2601c9d4f80aa31c8e6f44d12", "name": "Remux-2160p", "score": 1850 },
+    { "trash_id": "c3f91a772e5b44d0aa18e7c91b20", "name": "HDR", "score": 500 },
+    { "trash_id": "d4a02b883f6c55e1bb29f8d02c31", "name": "DV", "score": 500 },
+    { "trash_id": "e5b13c994g7d66f2cc30g9e13d42", "name": "Repack/Proper", "score": 25 },
+    { "trash_id": "f6c24d005h8e77g3dd41h0f24e53", "name": "BR-DISK", "score": -10000 },
+    { "trash_id": "a7d35e116i9f88h4ee52i1g35f64", "name": "CAM", "score": -10000 }
+  ]
+}

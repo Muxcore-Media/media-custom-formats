@@ -1,0 +1,14 @@
+{
+  "trash_id": "d4a02b883f6c55e1bb29f8d02c31",
+  "name": "DV",
+  "trash_scores": { "default": 500 },
+  "specifications": [
+    {
+      "name": "Dolby Vision",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": { "value": "(?i)\\b(dolby[ .]?vision|\\bdv\\b)\\b" }
+    }
+  ]
+}
