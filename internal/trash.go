@@ -359,7 +359,7 @@ func parseTrashFormat(raw []byte, scoreSet string) (*formatsv1.CustomFormat, err
 			})
 			continue
 		}
-		optional = append(optional, "(?:" + rx + ")")
+		optional = append(optional, "(?:"+rx+")")
 	}
 	if len(optional) > 0 {
 		required = append(required, &formatsv1.FormatRule{
@@ -663,7 +663,7 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 		guidesPath = strings.TrimSpace(os.Getenv("FORMATS_TRASH_GUIDES_PATH"))
 	}
 	if isOfficialGuidesSentinel(guidesPath) {
-		resolved, err := m.fetchOfficialTrashGuides(ctx)
+		resolved, err := m.fetchOfficialTrashGuides(ctx, officialRefreshRequested(guidesPath))
 		if err != nil {
 			return nil, fmt.Errorf("official TRaSH Guides: %w", err)
 		}

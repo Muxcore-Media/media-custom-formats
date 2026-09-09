@@ -97,6 +97,13 @@ func TestSyncTrashGuidesOfficialZip(t *testing.T) {
 	if again.GetFormatsUpserted() < 1 {
 		t.Fatalf("cached official sync upserted=%d", again.GetFormatsUpserted())
 	}
+
+	if _, err := m.SyncTrashGuides(context.Background(), &formatsv1.SyncTrashGuidesRequest{
+		GuidesPath: "official-refresh",
+		Services:   []string{"radarr"},
+	}); err == nil {
+		t.Fatal("official-refresh must re-download, not reuse the closed cache server")
+	}
 }
 
 func TestSyncTrashGuidesOfficialDoesNotUseClientURL(t *testing.T) {

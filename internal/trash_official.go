@@ -21,11 +21,15 @@ const (
 
 func isOfficialGuidesSentinel(path string) bool {
 	switch strings.ToLower(strings.TrimSpace(path)) {
-	case officialTrashGuidesSentinel, "trash-official", "official-zip":
+	case officialTrashGuidesSentinel, "trash-official", "official-zip", "official-refresh":
 		return true
 	default:
 		return false
 	}
+}
+
+func officialRefreshRequested(path string) bool {
+	return strings.EqualFold(strings.TrimSpace(path), "official-refresh")
 }
 
 func (m *Module) officialTrashZipURL() string {
@@ -46,9 +50,11 @@ func (m *Module) officialCacheDir() string {
 	return filepath.Join(filepath.Dir(m.dbPath), "trash-guides-official")
 }
 
-func (m *Module) fetchOfficialTrashGuides(ctx context.Context) (string, error) {
+func (m *Module) fetchOfficialTrashGuides(ctx context.Context, force bool) (string, error) {
 	dest := m.officialCacheDir()
-	if root := findGuidesJSONRoot(dest); root != "" {
+	if force {
+		_ = os.RemoveAll(dest)
+	} else if root := findGuidesJSONRoot(dest); root != "" {
 		return dest, nil
 	}
 	if err := os.MkdirAll(dest, 0o755); err != nil {
