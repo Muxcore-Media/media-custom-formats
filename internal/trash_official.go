@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/Muxcore-Media/core/sdk/go/module/pathguard"
 )
 
 const (
@@ -170,33 +172,21 @@ func extractOfficialTrashZip(zipPath, dest string) error {
 
 func safeZipPath(dest, name string) (string, error) {
 	norm := strings.ReplaceAll(name, "\\", "/")
-	if strings.HasPrefix(norm, "/") || strings.HasPrefix(norm, "../") {
-		return "", fmt.Errorf("illegal zip path %q", name)
-	}
-	for _, part := range strings.Split(norm, "/") {
-		if part == ".." {
-			return "", fmt.Errorf("illegal zip path %q", name)
-		}
-	}
 	cleaned := filepath.Clean(norm)
 	if cleaned == "." || cleaned == "" {
-		return dest, nil
+		abs, err := filepath.Abs(dest)
+		if err != nil {
+			return "", err
+		}
+		return abs, nil
 	}
-	if strings.HasPrefix(cleaned, "..") {
-		return "", fmt.Errorf("illegal zip path %q", name)
-	}
-	target := filepath.Join(dest, cleaned)
 	absDest, err := filepath.Abs(dest)
 	if err != nil {
 		return "", err
 	}
-	absTarget, err := filepath.Abs(target)
+	target, err := pathguard.Join(absDest, cleaned)
 	if err != nil {
-		return "", err
-	}
-	sep := string(os.PathSeparator)
-	if absTarget != absDest && !strings.HasPrefix(absTarget, absDest+sep) {
-		return "", fmt.Errorf("illegal zip path %q", name)
+		return "", fmt.Errorf("illegal zip path %q: %w", name, err)
 	}
 	return target, nil
 }

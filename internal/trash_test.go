@@ -77,6 +77,7 @@ func TestSyncTrashGuidesFromPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Setenv("FORMATS_TRASH_GUIDES_ROOTS", root)
 	resp, err := m.SyncTrashGuides(ctx, &formatsv1.SyncTrashGuidesRequest{
 		ImportProfiles: true,
 		GuidesPath:     root,

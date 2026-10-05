@@ -11,8 +11,64 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Muxcore-Media/core/sdk/go/module/pathguard"
 	formatsv1 "github.com/Muxcore-Media/media-custom-formats/proto/formatsv1"
 )
+
+func guidesRoots() ([]string, error) {
+	raw := strings.TrimSpace(os.Getenv("FORMATS_TRASH_GUIDES_ROOTS"))
+	if raw == "" {
+		return nil, fmt.Errorf("FORMATS_TRASH_GUIDES_ROOTS is not configured")
+	}
+	var roots []string
+	for _, p := range filepath.SplitList(raw) {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		abs, err := filepath.Abs(p)
+		if err != nil {
+			return nil, fmt.Errorf("resolve guides root: %w", err)
+		}
+		roots = append(roots, abs)
+	}
+	if len(roots) == 0 {
+		return nil, fmt.Errorf("FORMATS_TRASH_GUIDES_ROOTS is not configured")
+	}
+	return roots, nil
+}
+
+func confineGuidesPath(path string) (string, error) {
+	abs, err := filepath.Abs(strings.TrimSpace(path))
+	if err != nil {
+		return "", fmt.Errorf("resolve guides path: %w", err)
+	}
+	roots, err := guidesRoots()
+	if err != nil {
+		return "", err
+	}
+	resolved, err := pathguard.Confine(abs, roots)
+	if err != nil {
+		return "", fmt.Errorf("guides path outside allowed roots: %w", err)
+	}
+	return resolved, nil
+}
+
+func readConfined(path, root string) ([]byte, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	rootAbs, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
+	resolved, err := pathguard.Confine(abs, []string{rootAbs})
+	if err != nil {
+		return nil, fmt.Errorf("guides file outside root: %w", err)
+	}
+	return os.ReadFile(resolved) //nolint:gosec // path confined to the guides root
+}
 
 //go:embed guides-fixture
 var bundledGuides embed.FS
@@ -663,6 +719,12 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 			return nil, fmt.Errorf("official TRaSH Guides: %w", err)
 		}
 		guidesPath = resolved
+	} else if guidesPath != "" {
+		resolved, err := confineGuidesPath(guidesPath)
+		if err != nil {
+			return nil, err
+		}
+		guidesPath = resolved
 	}
 
 	resp := &formatsv1.SyncTrashGuidesResponse{}
@@ -684,7 +746,7 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 	if jsonRoot != "" {
 		resp.GuidesPath = jsonRoot
 		for _, path := range collectServiceJSON(jsonRoot, services, "cf") {
-			raw, err := os.ReadFile(path)
+			raw, err := readConfined(path, guidesPath)
 			if err != nil {
 				resp.Warnings = append(resp.Warnings, path+": "+err.Error())
 				resp.FormatsSkipped++
@@ -706,7 +768,7 @@ func (m *Module) SyncTrashGuides(ctx context.Context, req *formatsv1.SyncTrashGu
 		}
 		if importProfiles {
 			for _, path := range collectServiceJSON(jsonRoot, services, "quality_profiles", "quality-profiles") {
-				raw, err := os.ReadFile(path)
+				raw, err := readConfined(path, guidesPath)
 				if err != nil {
 					resp.Warnings = append(resp.Warnings, path+": "+err.Error())
 					continue

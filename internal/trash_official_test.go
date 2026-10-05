@@ -110,15 +110,12 @@ func TestSyncTrashGuidesOfficialDoesNotUseClientURL(t *testing.T) {
 	m := newTestModule(t)
 	m.officialTrashURL = ""
 	// A filesystem path that is not the sentinel stays local (no download).
-	resp, err := m.SyncTrashGuides(context.Background(), &formatsv1.SyncTrashGuidesRequest{
+	_, err := m.SyncTrashGuides(context.Background(), &formatsv1.SyncTrashGuidesRequest{
 		GuidesPath: filepath.Join(t.TempDir(), "missing"),
 		Services:   []string{"radarr"},
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if resp.GetGuidesPath() != "embedded:guides-fixture" {
-		t.Fatalf("missing path should fall back to embedded, got %s", resp.GetGuidesPath())
+	if err == nil {
+		t.Fatal("expected guides path outside FORMATS_TRASH_GUIDES_ROOTS to be refused")
 	}
 }
 
@@ -136,6 +133,13 @@ func TestSafeZipPathRejectsTraversal(t *testing.T) {
 	}
 	if filepath.Base(got) != "a.json" {
 		t.Fatalf("got %s", got)
+	}
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(dest, "link")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := safeZipPath(dest, "link/secret.json"); err == nil {
+		t.Fatal("expected symlink escape reject")
 	}
 }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Security
+- A local TRaSH `guides_path` must resolve inside `FORMATS_TRASH_GUIDES_ROOTS` (empty allow-list fails closed). Official zip extraction uses pathguard, so `..` and symlink escapes are refused. Guide JSON reads stay inside the confined root.
+
 ## [0.1.15] - 2026-10-05
 
 
