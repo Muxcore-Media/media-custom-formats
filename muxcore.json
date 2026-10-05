@@ -1,7 +1,7 @@
 {
   "name": "Custom Formats",
   "description": "Custom format definitions, quality profiles, and release scoring engine for media automation",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "author": "MuxCore",
   "roles": [
     "scoring"
