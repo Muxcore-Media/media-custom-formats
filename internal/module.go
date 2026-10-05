@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	modulesdk "github.com/Muxcore-Media/core/sdk/go/module"
+	manifest "github.com/Muxcore-Media/media-custom-formats"
 	"log/slog"
 	"math"
 	"net"
@@ -81,7 +83,7 @@ func (m *Module) Info() contracts.ModuleInfo {
 	return contracts.ModuleInfo{
 		ID:             m.id,
 		Name:           "Custom Formats",
-		Version:        "0.1.11",
+		Version:        modulesdk.ManifestVersion(manifest.ManifestJSON),
 		Roles:          []string{"scoring"},
 		Description:    "Custom format definitions, quality profiles, and release scoring engine",
 		Author:         "MuxCore",
