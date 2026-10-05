@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	modulesdk "github.com/Muxcore-Media/core/sdk/go/module"
-	manifest "github.com/Muxcore-Media/media-custom-formats"
 	"log/slog"
 	"math"
 	"net"
@@ -18,6 +16,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	modulesdk "github.com/Muxcore-Media/core/sdk/go/module"
+	"github.com/Muxcore-Media/core/sdk/go/module/meshtls"
+	manifest "github.com/Muxcore-Media/media-custom-formats"
 
 	"google.golang.org/grpc"
 
@@ -165,7 +167,11 @@ func (m *Module) Init(ctx context.Context) error {
 }
 
 func (m *Module) Start(ctx context.Context) error {
-	m.grpcSrv = grpc.NewServer()
+	srv, err := meshtls.NewServer()
+	if err != nil {
+		return fmt.Errorf("gRPC mesh TLS: %w", err)
+	}
+	m.grpcSrv = srv
 	formatsv1.RegisterFormatServiceServer(m.grpcSrv, m)
 	m.registerSettingsMesh(m.grpcSrv)
 
