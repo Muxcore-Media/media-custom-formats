@@ -327,11 +327,6 @@ func specToTitleMatch(spec trashSpec) (rx string, negate bool) {
 	}
 }
 
-func specToTitleRegex(spec trashSpec) string {
-	rx, _ := specToTitleMatch(spec)
-	return rx
-}
-
 func parseTrashFormat(raw []byte, scoreSet string) (*formatsv1.CustomFormat, error) {
 	var in trashCFFile
 	if err := json.Unmarshal(raw, &in); err != nil {

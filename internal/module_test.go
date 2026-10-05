@@ -19,7 +19,7 @@ func newTestModule(t *testing.T) *Module {
 	if err := m.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	t.Cleanup(func() { m.Stop(ctx) })
+	t.Cleanup(func() { _ = m.Stop(ctx) })
 	return m
 }
 
@@ -40,11 +40,11 @@ func TestSeedDefaults(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]int32{
-		"Remux":        100,
-		"HDR":          50,
-		"x265/HEVC":    25,
+		"Remux":         100,
+		"HDR":           50,
+		"x265/HEVC":     25,
 		"Proper/Repack": 20,
-		"CAM/TS":       -10000,
+		"CAM/TS":        -10000,
 	}
 	if len(list.Formats) != len(want) {
 		t.Fatalf("seeded formats = %d want %d", len(list.Formats), len(want))
@@ -271,7 +271,9 @@ func TestDeleteProfile(t *testing.T) {
 	ctx := context.Background()
 
 	created, _ := m.CreateProfile(ctx, &formatsv1.CreateProfileRequest{Name: "Test", MinScore: 0, CutoffScore: 100})
-	m.DeleteProfile(ctx, &formatsv1.DeleteProfileRequest{Id: created.Profile.Id})
+	if _, err := m.DeleteProfile(ctx, &formatsv1.DeleteProfileRequest{Id: created.Profile.Id}); err != nil {
+		t.Fatal(err)
+	}
 
 	list, _ := m.ListProfiles(ctx, &formatsv1.ListProfilesRequest{})
 	if len(list.Profiles) != 0 {
@@ -335,20 +337,24 @@ func TestScoreReleaseWithFormats(t *testing.T) {
 	m := newTestModule(t)
 	ctx := context.Background()
 
-	m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
+	if _, err := m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
 		Name: "HDR",
 		Rules: []*formatsv1.FormatRule{
 			{Field: "title", Op: "matches", Value: "(?i)hdr|dolby.?vision"},
 		},
 		DefaultScore: 50,
-	})
-	m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := m.CreateFormat(ctx, &formatsv1.CreateFormatRequest{
 		Name: "x265",
 		Rules: []*formatsv1.FormatRule{
 			{Field: "title", Op: "matches", Value: "(?i)x265|hevc"},
 		},
 		DefaultScore: 25,
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	resp, err := m.ScoreRelease(ctx, &formatsv1.ScoreReleaseRequest{
 		Title: "Movie.2020.2160p.Remux.HEVC.HDR.mkv",

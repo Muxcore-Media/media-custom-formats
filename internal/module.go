@@ -619,7 +619,10 @@ func scanFormat(rows *sql.Rows) *formatsv1.CustomFormat {
 		Id: id, Name: name, DefaultScore: int32(defaultScore),
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	if err := json.Unmarshal([]byte(rulesJSON), &f.Rules); err != nil {
+		slog.Warn("custom format has malformed rules JSON", "id", id, "error", err)
+		f.Rules = nil
+	}
 	return f
 }
 
@@ -633,7 +636,10 @@ func scanFormatRow(row *sql.Row) *formatsv1.CustomFormat {
 		Id: id, Name: name, DefaultScore: int32(defaultScore),
 		CreatedAt: createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(rulesJSON), &f.Rules)
+	if err := json.Unmarshal([]byte(rulesJSON), &f.Rules); err != nil {
+		slog.Warn("custom format has malformed rules JSON", "id", id, "error", err)
+		f.Rules = nil
+	}
 	return f
 }
 
@@ -673,7 +679,10 @@ func scanProfile(rows *sql.Rows) *formatsv1.QualityProfile {
 		FormatScores: make(map[string]int32),
 		CreatedAt:    createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
+	if err := json.Unmarshal([]byte(scoresJSON), &p.FormatScores); err != nil {
+		slog.Warn("quality profile has malformed format scores JSON", "id", id, "error", err)
+		p.FormatScores = make(map[string]int32)
+	}
 	return p
 }
 
@@ -691,7 +700,10 @@ func scanProfileRow(row *sql.Row) *formatsv1.QualityProfile {
 		FormatScores: make(map[string]int32),
 		CreatedAt:    createdAt, UpdatedAt: updatedAt,
 	}
-	json.Unmarshal([]byte(scoresJSON), &p.FormatScores)
+	if err := json.Unmarshal([]byte(scoresJSON), &p.FormatScores); err != nil {
+		slog.Warn("quality profile has malformed format scores JSON", "id", id, "error", err)
+		p.FormatScores = make(map[string]int32)
+	}
 	return p
 }
 
